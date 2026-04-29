@@ -1,51 +1,74 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import api from "../utils/api";
 import logo from "../assets/vantix-logo.svg";
 
-const AdminAuth = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [isDark, setIsDark] = useState(
-    () => (localStorage.getItem("theme") || "light") === "dark"
-  );
-  const navigate = useNavigate();
+import { auth } from "../firebase";
+import {
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  GithubAuthProvider,
+  signInWithPopup
+} from "firebase/auth";
 
-  const handleToggleTheme = () => {
-    if (typeof window.toggleTheme === "function") window.toggleTheme();
-    setIsDark(prev => !prev);
-  };
+const AdminAuth = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setBusy(true);
-      const res = await api.post('/auth/admin-login', { email, password });
-      if (res.data.success && res.data.token) {
-        sessionStorage.setItem('vantixAdminToken', res.data.token);
-        navigate('/');
-      }
+
+      const res = await signInWithEmailAndPassword(auth, email, password);
+      const token = await res.user.getIdToken();
+
+      sessionStorage.setItem("vantixAdminToken", token);
+      navigate("/");
+
     } catch (err) {
-      setError(err.response?.data?.error || 'Authentication failed');
+      setError(err.code);
     } finally {
       setBusy(false);
     }
   };
 
+  const googleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+
+      const token = await result.user.getIdToken();
+      sessionStorage.setItem("vantixAdminToken", token);
+
+      navigate("/");
+    } catch (err) {
+      setError(err.code);
+    }
+  };
+
+  const githubLogin = async () => {
+    try {
+      const provider = new GithubAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+
+      const token = await result.user.getIdToken();
+      sessionStorage.setItem("vantixAdminToken", token);
+
+      navigate("/");
+    } catch (err) {
+      setError(err.code);
+    }
+  };
+
   return (
     <div className="auth">
-      <div style={{ position: "fixed", top: 18, right: 22, zIndex: 9999 }}
-           className="theme-toggle"
-           onClick={handleToggleTheme}
-           title="Toggle theme"
-      >
-        <div className="toggle-track">
-          <div className="toggle-thumb"></div>
-        </div>
-      </div>
       <div className="auth__panel">
+
+        {/* LEFT PANEL */}
         <section className="auth__left">
           <div className="auth__logo">
             <img src={logo} alt="Vantix" />
@@ -55,87 +78,106 @@ const AdminAuth = () => {
             </div>
           </div>
 
-          <h2 className="auth__headline">Company-grade data leak prevention dashboard</h2>
+          <h2 className="auth__headline">
+            Company-grade data leak prevention dashboard
+          </h2>
+
           <p className="auth__copy">
             Monitor violations, manage employee access, and tune detection rules — all with a security-first UX.
           </p>
-
-          <div style={{ marginTop: 18 }} className="grid grid--2">
-            <div className="card" style={{ background: "rgba(255,255,255,.05)", boxShadow: "none" }}>
-              <div className="card__body">
-                <p className="card__title">Real-time visibility</p>
-                <p style={{ marginTop: 8, color: "var(--text-secondary)", fontSize: 13 }}>
-                  Keep teams compliant with clear incident timelines and offender signals.
-                </p>
-              </div>
-            </div>
-            <div className="card" style={{ background: "rgba(255,255,255,.05)", boxShadow: "none" }}>
-              <div className="card__body">
-                <p className="card__title">Rule controls</p>
-                <p style={{ marginTop: 8, color: "var(--text-secondary)", fontSize: 13 }}>
-                  Protect domains and keywords with fast, low-friction configuration.
-                </p>
-              </div>
-            </div>
-          </div>
         </section>
 
+        {/* RIGHT PANEL */}
         <section className="auth__right">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
-            <div>
-              <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>Sign in</div>
-              <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-.4px" }}>Admin access</div>
+
+          <div>
+            <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+              Sign in
             </div>
-            <span className="badge" style={{ borderColor: "rgba(37,230,217,.35)", background: "rgba(37,230,217,.10)" }}>
-              Secure
-            </span>
+            <div style={{ fontSize: 22, fontWeight: 700 }}>
+              Admin access
+            </div>
           </div>
 
-          {error && <div className="toast toast--err" style={{ marginTop: 14 }}>{error}</div>}
-
-          <form onSubmit={handleSubmit} style={{ marginTop: 14 }} className="grid" aria-label="Admin login">
-            <div className="field">
-              <div className="label">Email</div>
-              <input
-                className="input"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@company.com"
-                required
-                autoComplete="email"
-              />
+          {error && (
+            <div className="toast toast--err" style={{ marginTop: 12 }}>
+              {error}
             </div>
+          )}
 
-            <div className="field">
-              <div className="label">Password</div>
-              <input
-                className="input"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                autoComplete="current-password"
-              />
-            </div>
+          <form onSubmit={handleSubmit} className="grid" style={{ marginTop: 12 }}>
 
-            <button className="btn btn--primary" type="submit" disabled={busy}>
-              {busy ? "Signing in…" : "Continue"}
+            <input
+              className="input"
+              type="email"
+              placeholder="admin@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            <input
+              className="input"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            <button
+              type="submit"
+              className="btn btn--primary"
+              disabled={busy}
+            >
+              {busy ? "Signing in..." : "Continue"}
             </button>
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
-              <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: 12 }}>
-                By continuing you agree to your organization’s security policies.
-              </p>
-            </div>
-            
-            <div style={{ marginTop: 16 }}>
-              <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: 12 }}>
-                Don't have an account? <Link to="/register" style={{ color: "#25E6D9", textDecoration: "none" }}>Create an organization &rarr;</Link>
-              </p>
-            </div>
           </form>
+
+          {/* 🔥 SOCIAL LOGIN BUTTONS */}
+          <div style={{ marginTop: 18 }}>
+            <button
+              type="button"
+              onClick={googleLogin}
+              style={{
+                width: "100%",
+                marginBottom: 10,
+                border: "1px solid rgba(255,255,255,0.2)",
+                background: "transparent",
+                color: "#fff",
+                padding: "10px",
+                borderRadius: "8px",
+                cursor: "pointer"
+              }}
+            >
+              Continue with Google
+            </button>
+
+            <button
+              type="button"
+              onClick={githubLogin}
+              style={{
+                width: "100%",
+                border: "1px solid rgba(255,255,255,0.2)",
+                background: "transparent",
+                color: "#fff",
+                padding: "10px",
+                borderRadius: "8px",
+                cursor: "pointer"
+              }}
+            >
+              Continue with GitHub
+            </button>
+          </div>
+
+          <div style={{ marginTop: 14, fontSize: 12 }}>
+            Don't have an account?{" "}
+            <Link to="/register" style={{ color: "#25E6D9" }}>
+              Create an organization →
+            </Link>
+          </div>
+
         </section>
       </div>
     </div>

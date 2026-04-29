@@ -1,7 +1,7 @@
 require('dotenv').config({ path: __dirname + '/../.env' });
 const mongoose = require("mongoose");
-const crypto   = require("crypto");
-const Rule     = require("../models/Rule");
+const crypto = require("crypto");
+const Rule = require("../models/Rule");
 
 function hashValue(value) {
   return crypto.createHash("sha256").update(value.trim()).digest("hex");

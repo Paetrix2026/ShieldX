@@ -68,8 +68,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.storage.local.get([storageKey], (res) => {
       const now = Date.now();
       const last = res[storageKey] || 0;
-      // Send once a day (24 hours) per platform
-      if (now - last > 24 * 60 * 60 * 1000) {
+      // Send every 5 minutes per platform to maintain "Online" status
+      if (now - last > 5 * 60 * 1000) {
         fetch("http://localhost:5000/api/activity", {
           method: "POST",
           headers: {
@@ -79,8 +79,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           body: JSON.stringify({ platform }),
         })
           .then((res) => res.json())
-          .then(() => chrome.storage.local.set({ [storageKey]: now }))
-          .catch((err) => console.error("[Vantix BG] Heartbeat error:", err));
+          .then((data) => {
+            // Store the access status returned by the server
+            chrome.storage.local.set({ 
+              [storageKey]: now,
+              vantixAccessStatus: data.accessStatus || "granted"
+            });
+            sendResponse({ success: true, accessStatus: data.accessStatus });
+          })
+          .catch((err) => {
+            console.error("[Vantix BG] Heartbeat error:", err);
+            sendResponse({ success: false });
+          });
+      } else {
+        sendResponse({ success: true, cached: true });
       }
     });
     return true;

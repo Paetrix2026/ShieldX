@@ -74,22 +74,31 @@ router.patch(
   "/:id",
   [authMiddleware, adminMiddleware],
   asyncHandler(async (req, res) => {
-    const { role } = req.body;
-    if (!role || !["admin", "employee"].includes(role)) {
-      return res.status(400).json({ success: false, error: "Valid role required (admin or employee)" });
-    }
-
+    const { role, accessStatus } = req.body;
+    
     const user = await User.findOne({ _id: req.params.id, orgId: req.orgId });
     if (!user) {
       return res.status(404).json({ success: false, error: "User not found" });
     }
 
-    user.role = role;
+    if (role && ["admin", "employee"].includes(role)) {
+      user.role = role;
+    }
+
+    if (accessStatus && ["granted", "revoked"].includes(accessStatus)) {
+      user.accessStatus = accessStatus;
+    }
+
     await user.save();
 
     res.json({
       success: true,
-      user: { id: user._id, email: user.email, role: user.role },
+      user: { 
+        id: user._id, 
+        email: user.email, 
+        role: user.role,
+        accessStatus: user.accessStatus
+      },
     });
   })
 );

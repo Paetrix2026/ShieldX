@@ -60,8 +60,14 @@
       return;
     }
 
-    chrome.storage.local.get(["isProtectionEnabled"], (res) => {
+    chrome.storage.local.get(["isProtectionEnabled", "vantixAccessStatus"], (res) => {
       isProtectionEnabled = res.isProtectionEnabled ?? true;
+      const accessStatus = res.vantixAccessStatus || "granted";
+      
+      if (accessStatus === "revoked") {
+        console.warn("[Vantix] Access revoked by admin. Protection disabled.");
+        isProtectionEnabled = false;
+      }
     });
 
     chrome.storage.local.get(SETTINGS_DEFAULTS, (settings) => {
@@ -104,7 +110,19 @@
     else if (hostname.includes("chat.mistral.ai")) platform = "Mistral";
     else platform = hostname;
 
-    chrome.runtime.sendMessage({ type: "PING_HEARTBEAT", token: vantixToken, platform });
+    // Send initial heartbeat
+    chrome.runtime.sendMessage({ type: "PING_HEARTBEAT", token: vantixToken || vantixIndividualToken, platform });
+
+    // Set up recurring heartbeat every 5 minutes
+    setInterval(() => {
+      chrome.runtime.sendMessage({ type: "PING_HEARTBEAT", token: vantixToken || vantixIndividualToken, platform }, (response) => {
+        if (response?.accessStatus === "revoked") {
+          isProtectionEnabled = false;
+          hideWarning();
+          unblockSendButton();
+        }
+      });
+    }, 5 * 60 * 1000);
 
     if (!scanInterval) {
       scanInterval = setInterval(scan, 500);

@@ -14,14 +14,25 @@ router.post(
   authMiddleware,
   asyncHandler(async (req, res) => {
     const { platform = "Unknown" } = req.body || {};
-    // Insert a new log instead of updating so we have a timeline of activity
+    
+    // Update User model with real-time metadata
+    const user = await User.findByIdAndUpdate(req.user.id, {
+      lastSeenAt: Date.now(),
+      lastSeenPlatform: platform
+    }, { new: true });
+
+    // Insert a new log for historical analytics
     await ActivityLog.create({
       userId: req.user.id,
       orgId: req.orgId,
       platform,
       timestamp: Date.now()
     });
-    res.json({ success: true });
+
+    res.json({ 
+      success: true, 
+      accessStatus: user.accessStatus || "granted" 
+    });
   })
 );
 

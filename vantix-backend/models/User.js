@@ -28,6 +28,17 @@ const UserSchema = new mongoose.Schema(
       ref: 'User', 
       required: function() { return this.role === 'employee'; } 
     },
+    accessStatus: {
+      type: String,
+      enum: ["granted", "revoked"],
+      default: "granted",
+    },
+    lastSeenAt: {
+      type: Date,
+    },
+    lastSeenPlatform: {
+      type: String,
+    },
   },
   {
     timestamps: true,

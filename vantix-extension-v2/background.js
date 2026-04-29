@@ -86,3 +86,39 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 });
+
+// ── Externally Connectable (Sync from Dashboard) ─────────────────────────────
+chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
+  console.log("[Vantix BG] External message received:", message);
+  if (message.type === "SYNC_AUTH") {
+    console.log("[Vantix BG] Syncing auth and fetching profile...");
+    
+    // Fetch profile to get userType, orgId, etc.
+    fetch("http://localhost:5000/api/auth/profile", {
+      headers: { "Authorization": `Bearer ${message.token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      const user = data.user || {};
+      chrome.storage.local.set({
+        vantixToken: message.token,
+        vantixEmail: message.email,
+        vantixUserType: message.userType || (user.role === "admin" ? "company" : (user.userType || "company")),
+        vantixOrgId: user.organizationId || user.orgId || ""
+      }, () => {
+        console.log("[Vantix BG] Auth and profile synced successfully");
+        sendResponse({ success: true });
+      });
+    })
+    .catch(err => {
+      console.error("[Vantix BG] Profile fetch failed, syncing token only:", err);
+      chrome.storage.local.set({
+        vantixToken: message.token,
+        vantixEmail: message.email
+      }, () => {
+        sendResponse({ success: true });
+      });
+    });
+    return true;
+  }
+});

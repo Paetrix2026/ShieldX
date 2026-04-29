@@ -44,13 +44,32 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Sync with extension if present
+        try {
+          const token = await user.getIdToken();
+          const EXTENSION_ID = "fhohiejeobmkadffkmblpnnakcfkhadh";
+          if (window.chrome && window.chrome.runtime && window.chrome.runtime.sendMessage) {
+            window.chrome.runtime.sendMessage(EXTENSION_ID, { 
+              type: "SYNC_AUTH", 
+              token, 
+              email: user.email 
+            }, () => {
+              if (window.chrome.runtime.lastError) {
+                // Silent fail if extension not installed/ready
+              }
+            });
+          }
+        } catch (e) {
+          console.error("Extension sync failed", e);
+        }
+      } else {
         navigate("/login");
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     const fetchData = async () => {

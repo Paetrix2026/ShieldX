@@ -1,4 +1,4 @@
-// scripts/backfillHashes.js
+require('dotenv').config({ path: __dirname + '/../.env' });
 const mongoose = require("mongoose");
 const crypto   = require("crypto");
 const Rule     = require("../models/Rule");
@@ -8,8 +8,12 @@ function hashValue(value) {
 }
 
 async function run() {
-  await mongoose.connect("mongodb+srv://gowrikaalva_db_user:0kZKfens0x1xDNy6@cluster0.xqcfwjb.mongodb.net/?appName=Cluster0");
-  console.log("Connected ✓");
+  if (!process.env.MONGO_URI) {
+    console.error("MONGO_URI not found in .env");
+    process.exit(1);
+  }
+  await mongoose.connect(process.env.MONGO_URI);
+  console.log("Connected to MongoDB ✓");
 
   const rules = await Rule.find({});
   let updated = 0;

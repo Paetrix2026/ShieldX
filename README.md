@@ -81,18 +81,6 @@ This repository contains the complete Vantix ecosystem, divided into three main 
 cd vantix-backend
 npm install
 ```
-Create a `.env` file in the `vantix-backend` directory:
-```env
-MONGO_URI=mongodb://127.0.0.1:27017/vantix
-PORT=5000
-JWT_SECRET=your_jwt_secret
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_app_password
-SMTP_FROM=your_email@gmail.com
-INACTIVITY_DAYS=3
-```
 Run the server:
 ```bash
 npm run dev

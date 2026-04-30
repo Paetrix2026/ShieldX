@@ -89,17 +89,28 @@ const PATTERNS = {
     check: () => true,
   },
   creditCard: {
-    regex: /\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|6(?:011|5[0-9]{2})[0-9]{12})\b/g,
-    label: "Credit card number",
+    // Matches 16-digit cards: contiguous OR space/dash separated in groups of 4
+    // Requires exactly 16 digits — does NOT match 10-digit phone numbers
+    regex: /(?<!\d)(?:\d{4}[\s\-]){3}\d{4}(?!\d)|(?<!\d)\d{16}(?!\d)/g,
+    label: "Credit / Debit Card",
+    check: () => true,
+  },
+  accountNumber: {
+    // Bank account: 9-18 digit strings that are NOT 10 or 12 or 16 digits (phone/aadhaar/card)
+    regex: /(?<!\d)\d{11}(?!\d)|(?<!\d)\d{13,15}(?!\d)|(?<!\d)\d{17,18}(?!\d)/g,
+    label: "Bank Account Number",
     check: () => true,
   },
   phone: {
-    regex: /(?:\+91[\s-]?)?[6-9]\d{4}\s?\d{5}\b/g,
+    // Exactly 10 bare digits (Indian mobile) OR international format
+    // Strict boundaries prevent matching inside 16-digit card numbers
+    regex: /(?<!\d)[6-9]\d{9}(?!\d)|(?:\+91[\s\-]?)[6-9]\d{9}(?!\d)|(?:\+?[1-9]\d{0,2}[\s\-]?)\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{4}(?!\d)/g,
     label: "Phone number",
     check: () => true,
   },
   aadhaar: {
-    regex: /\b\d{4}\s?\d{4}\s?\d{4}\b/g,
+    // Exactly 12 digits in groups of 4 (space-separated) OR contiguous
+    regex: /(?<!\d)\d{4}\s\d{4}\s\d{4}(?!\d)|(?<!\d)[2-9]\d{11}(?!\d)/g,
     label: "Aadhaar Number",
     check: () => true,
   },

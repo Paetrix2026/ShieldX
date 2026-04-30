@@ -23,22 +23,15 @@ const UserSchema = new mongoose.Schema(
       enum: ["admin", "employee"],
       default: "employee",
     },
-    orgId: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: 'User', 
-      required: function() { return this.role === 'employee'; } 
+    orgId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: function () { return this.role === 'employee'; }
     },
-    accessStatus: {
-      type: String,
-      enum: ["granted", "revoked"],
-      default: "granted",
-    },
-    lastSeenAt: {
-      type: Date,
-    },
-    lastSeenPlatform: {
-      type: String,
-    },
+    isOnline: { type: Boolean, default: false },
+    lastActive: { type: Date, default: Date.now },
+    currentApp: { type: String, default: "" },
+    isAuthorized: { type: Boolean, default: true },
   },
   {
     timestamps: true,

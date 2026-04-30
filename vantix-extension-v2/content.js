@@ -8,6 +8,29 @@
     return;
   }
 
+  // ── Extension context guard ────────────────────────────────────────────────
+  // When the extension is reloaded while a page is open, all chrome.* calls
+  // throw "Extension context invalidated". This guard prevents that crash.
+  function isExtensionAlive() {
+    try {
+      return !!(chrome?.runtime?.id);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Safe wrapper for chrome.storage.local.get — returns {} if context is dead
+  function safeStorageGet(keys) {
+    return new Promise((resolve) => {
+      if (!isExtensionAlive()) return resolve({});
+      try {
+        chrome.storage.local.get(keys, resolve);
+      } catch (e) {
+        resolve({});
+      }
+    });
+  }
+
   console.log("[Vantix] Running on:", window.location.href);
 
   // ── Selectors ──────────────────────────────────────────────────────────────
@@ -51,49 +74,48 @@
   let scanInterval = null;
 
   async function startDetection() {
-    const { vantixToken, vantixIndividualToken, vantixUserType } = await new Promise((res) =>
-      chrome.storage.local.get(["vantixToken", "vantixIndividualToken", "vantixUserType"], res)
+    if (!isExtensionAlive()) return;
+    const { vantixToken, vantixIndividualToken, vantixUserType } = await safeStorageGet(
+      ["vantixToken", "vantixIndividualToken", "vantixUserType"]
     );
 
-    if (!vantixToken && !vantixIndividualToken) {
-      console.warn("[Vantix] Not logged in — detection halted.");
-      return;
+    // Allow detection even without login (demo/trial mode) — just skip backend calls
+    const hasToken = !!(vantixToken || vantixIndividualToken);
+    if (!hasToken) {
+      console.warn("[Vantix] No token — running in local detection mode (no backend).");
     }
 
-    chrome.storage.local.get(["isProtectionEnabled", "vantixAccessStatus"], (res) => {
+    if (!isExtensionAlive()) return;
+    chrome.storage.local.get(["isProtectionEnabled"], (res) => {
       isProtectionEnabled = res.isProtectionEnabled ?? true;
-      const accessStatus = res.vantixAccessStatus || "granted";
-      
-      if (accessStatus === "revoked") {
-        console.warn("[Vantix] Access revoked by admin. Protection disabled.");
-        isProtectionEnabled = false;
-      }
     });
 
+    if (!isExtensionAlive()) return;
     chrome.storage.local.get(SETTINGS_DEFAULTS, (settings) => {
       applyStorageSettings(settings);
       console.log("[Vantix] Storage settings applied ✓");
     });
 
-    if (vantixUserType !== "individual") {
-      chrome.runtime.sendMessage(
-        { type: "FETCH_RULES", token: vantixToken },
-        (response) => {
-          if (response?.success) {
-            loadBackendRules({
-              companyRules: response.companyRules,
-              generalRules: response.generalRules,
-            });
-
-            // ── Populate hash arrays for encrypted field detection ──────────
-            companyApiKeyHashes    = (response.companyRules?.apiKeys          || []).map((k) => ({ hash: k.hash, label: k.label }));
-            companySensitiveHashes = (response.companyRules?.sensitiveNumbers || []).map((n) => ({ hash: n.hash, label: n.label, type: n.type }));
-            console.log(`[Vantix] Loaded ${companyApiKeyHashes.length} API key hashes, ${companySensitiveHashes.length} number hashes`);
-          } else {
-            console.warn("[Vantix] Could not load backend rules — using local fallback.");
+    if (vantixUserType !== "individual" && isExtensionAlive()) {
+      try {
+        chrome.runtime.sendMessage(
+          { type: "FETCH_RULES", token: vantixToken },
+          (response) => {
+            if (!isExtensionAlive()) return;
+            if (response?.success) {
+              loadBackendRules({
+                companyRules: response.companyRules,
+                generalRules: response.generalRules,
+              });
+              companyApiKeyHashes    = (response.companyRules?.apiKeys          || []).map((k) => ({ hash: k.hash, label: k.label }));
+              companySensitiveHashes = (response.companyRules?.sensitiveNumbers || []).map((n) => ({ hash: n.hash, label: n.label, type: n.type }));
+              console.log(`[Vantix] Loaded ${companyApiKeyHashes.length} API key hashes, ${companySensitiveHashes.length} number hashes`);
+            } else {
+              console.warn("[Vantix] Could not load backend rules — using local fallback.");
+            }
           }
-        }
-      );
+        );
+      } catch (e) { /* context invalidated — ignore */ }
     }
 
     let platform = "Unknown";
@@ -110,23 +132,15 @@
     else if (hostname.includes("chat.mistral.ai")) platform = "Mistral";
     else platform = hostname;
 
-    // Send initial heartbeat
-    chrome.runtime.sendMessage({ type: "PING_HEARTBEAT", token: vantixToken || vantixIndividualToken, platform });
-
-    // Set up recurring heartbeat every 5 minutes
-    setInterval(() => {
-      chrome.runtime.sendMessage({ type: "PING_HEARTBEAT", token: vantixToken || vantixIndividualToken, platform }, (response) => {
-        if (response?.accessStatus === "revoked") {
-          isProtectionEnabled = false;
-          hideWarning();
-          unblockSendButton();
-        }
-      });
-    }, 5 * 60 * 1000);
+    if (isExtensionAlive()) {
+      try {
+        chrome.runtime.sendMessage({ type: "PING_HEARTBEAT", token: vantixToken, platform });
+      } catch (e) { /* context invalidated — ignore */ }
+    }
 
     if (!scanInterval) {
-      scanInterval = setInterval(scan, 500);
-      document.addEventListener("input", scan, { passive: true });
+      scanInterval = setInterval(scan, 1000);
+      // document.addEventListener("input", scan, { passive: true }); // Removed to enforce strictly 1 second waiting time
     }
     console.log("[Vantix] v2 detection started ✓");
   }
@@ -589,14 +603,20 @@
       return;
     }
 
+    // Stop scanning if extension was reloaded — avoids "context invalidated" errors
+    if (!isExtensionAlive()) {
+      if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+      return;
+    }
+
     const input = getInputBox();
     if (!input) return;
 
     const text = getText(input);
     if (text === lastText) return;
 
-    const { vantixUserType, vantixTrialExpiry, vantixScanCount } = await new Promise(res =>
-      chrome.storage.local.get(["vantixUserType", "vantixTrialExpiry", "vantixScanCount"], res)
+    const { vantixUserType, vantixTrialExpiry, vantixScanCount } = await safeStorageGet(
+      ["vantixUserType", "vantixTrialExpiry", "vantixScanCount"]
     );
 
     if (
@@ -624,8 +644,8 @@
     // ── Async Presidio detection (Backend) ────────────────────────────────
     let presidioMatches = [];
     try {
-      const { vantixToken, vantixIndividualToken } = await new Promise((res) =>
-        chrome.storage.local.get(["vantixToken", "vantixIndividualToken"], res)
+      const { vantixToken, vantixIndividualToken } = await safeStorageGet(
+        ["vantixToken", "vantixIndividualToken"]
       );
       const token = vantixToken || vantixIndividualToken;
       if (token) {

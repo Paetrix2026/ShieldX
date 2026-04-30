@@ -40,6 +40,7 @@ const RuleSchema = new mongoose.Schema(
     customPatterns:   { type: [CustomPatternSchema],    default: [] },
     apiKeys:          { type: [ApiKeySchema],           default: [] },
     sensitiveNumbers: { type: [SensitiveNumberSchema],  default: [] },
+    monitoredApps:    { type: [String],                 default: ["ChatGPT", "Notepad"] },
   },
   { timestamps: true }
 );

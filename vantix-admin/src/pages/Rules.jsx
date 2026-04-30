@@ -22,6 +22,7 @@ const Rules = () => {
   const [newKeyword, setNewKeyword] = useState("");
   const [newApiKey,  setNewApiKey]  = useState(EMPTY_APIKEY);
   const [newNumber,  setNewNumber]  = useState(EMPTY_NUMBER);
+  const [newApp,     setNewApp]     = useState("");
   const [busy, setBusy] = useState(false);
 
   const fetchRules = async () => {
@@ -33,6 +34,7 @@ const Rules = () => {
         customPatterns:   res.data.companyRules?.customPatterns   || [],
         apiKeys:          res.data.companyRules?.apiKeys          || [],
         sensitiveNumbers: res.data.companyRules?.sensitiveNumbers || [],
+        monitoredApps:    res.data.companyRules?.monitoredApps    || [],
       });
     } catch (err) { console.error(err); }
   };
@@ -61,7 +63,20 @@ const Rules = () => {
   const handleRemoveApiKey  = wrap((id)      => api.delete(`/rules/apikey/${id}`));
   const handleRemoveNumber  = wrap((id)      => api.delete(`/rules/number/${id}`));
 
-  const totalRules = rules.domains.length + rules.keywords.length + rules.apiKeys.length + rules.sensitiveNumbers.length;
+  const handleAddApp = wrap(async (e) => {
+    e.preventDefault();
+    if (!newApp.trim()) return;
+    const updated = [...(rules.monitoredApps || []), newApp.trim()];
+    await api.put("/rules", { monitoredApps: updated });
+    setNewApp("");
+  });
+
+  const handleRemoveApp = wrap(async (appToRemove) => {
+    const updated = (rules.monitoredApps || []).filter(a => a !== appToRemove);
+    await api.put("/rules", { monitoredApps: updated });
+  });
+
+  const totalRules = rules.domains.length + rules.keywords.length + rules.apiKeys.length + rules.sensitiveNumbers.length + (rules.monitoredApps || []).length;
   const autoDetectedCount = rules.apiKeys.filter(k => k.auto_detected).length;
 
   /* ── shared row style used by all 4 forms ── */
@@ -202,6 +217,58 @@ const Rules = () => {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Desktop Watchlist ── */}
+        <section className="card" style={{ gridColumn: "1 / -1" }}>
+          <div className="card__head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <p className="card__title">Desktop Agent Watchlist</p>
+              <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted-2)" }}>
+                Specify desktop applications (e.g. ChatGPT, Slack) for the agent to monitor keystrokes on.
+              </p>
+            </div>
+            <span className="badge">{(rules.monitoredApps || []).length} apps</span>
+          </div>
+          <div className="card__body">
+            <form onSubmit={handleAddApp}>
+              <div style={formRow}>
+                <div style={fieldGrow}>
+                  <div className="label">Application Name (Window Title)</div>
+                  <input className="input" type="text" value={newApp}
+                    onChange={(e) => setNewApp(e.target.value)}
+                    placeholder="ChatGPT" required />
+                </div>
+                <div style={btnWrap}>
+                  <button className="btn btn--primary" type="submit"
+                    disabled={busy} style={btnFull}>
+                    + Add App
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <div style={{ marginTop: 14 }}>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {(rules.monitoredApps || []).map((app, i) => (
+                  <div key={i} style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    background: "var(--input-inline-bg)", padding: "6px 12px",
+                    borderRadius: 20, border: "1px solid var(--border)"
+                  }}>
+                    <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{app}</span>
+                    <button type="button" onClick={() => handleRemoveApp(app)} disabled={busy}
+                      style={{ background: "transparent", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: 14, fontWeight: "bold" }}>
+                      ×
+                    </button>
+                  </div>
+                ))}
+                {(!rules.monitoredApps || rules.monitoredApps.length === 0) && (
+                  <span style={{ color: "var(--empty-state-text)", fontSize: 13 }}>No desktop apps monitored</span>
+                )}
+              </div>
             </div>
           </div>
         </section>

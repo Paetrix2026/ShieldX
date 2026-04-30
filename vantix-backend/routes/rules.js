@@ -50,6 +50,7 @@ router.get(
         customPatterns:   companyPatterns,
         apiKeys:          (rule.apiKeys          || []).map(safeApiKey),
         sensitiveNumbers: (rule.sensitiveNumbers || []).map(safeNumber),
+        monitoredApps:    rule.monitoredApps  || ["ChatGPT", "Notepad"],
       },
       generalRules: {
         domains:        [],
@@ -65,12 +66,13 @@ router.put(
   "/",
   [authMiddleware, adminMiddleware],
   asyncHandler(async (req, res) => {
-    const { domains, keywords, customPatterns } = req.body;
+    const { domains, keywords, customPatterns, monitoredApps } = req.body;
     const rules = await getRules(req.orgId);
 
     if (Array.isArray(domains))        rules.domains        = domains;
     if (Array.isArray(keywords))       rules.keywords       = keywords;
     if (Array.isArray(customPatterns)) rules.customPatterns = customPatterns;
+    if (Array.isArray(monitoredApps))  rules.monitoredApps  = monitoredApps;
 
     await rules.save();
     console.log("[Rules] Rules updated via PUT ✓");

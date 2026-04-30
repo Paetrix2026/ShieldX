@@ -38,6 +38,37 @@ This repository contains the complete Vantix ecosystem, divided into three main 
 * **Backend**: Node.js, Express, MongoDB, Mongoose, JWT Authentication
 * **Extension**: Vanilla JavaScript, Chrome Extension API (Manifest V3)
 * **Utilities**: Nodemailer (SMTP alerting), Dotenv
+* **Agent**: Python 3, pyperclip, win10toast, requests, pynput, pygetwindow, phonenumbers
+
+## 🤖 Vantix Agent — What's Detected
+
+### Clipboard Guard (always-on)
+| Type | Examples |
+|---|---|
+| PAN Card | ABCDE1234F |
+| Aadhaar | 1234 5678 9012 or 1234-5678-9012 |
+| Credit Card | 4111 1111 1111 1111 |
+| API Keys | OpenAI `sk-...`, AWS `AKIA...`, GitHub `ghp_...`, Stripe `sk_live_...`, Google `AIza...`, OpenAI Project `sk-proj-...`, Slack `xoxb-...` |
+| JWT Token | `eyJ...` |
+| DB Connection String | `mongodb://`, `mysql://`, `postgresql://` |
+| Private IP | 192.168.x.x, 10.x.x.x, 172.16-31.x.x |
+| IFSC Code | HDFC0001234 |
+| Bank Account | 9–18 digit numbers |
+| ENV Secrets | `API_KEY=abc123`, `export SECRET=xyz` |
+| Email (standard) | user@gmail.com |
+| Email (obfuscated) | user (at) gmail (dot) com |
+| Phone (Indian) | +91 9876543210, 9876543210 |
+| Phone (International) | +1 415-555-0100 |
+| Phone (US) | (415) 555-0100 |
+
+### Desktop Guard (new — monitors typing in selected apps)
+* **What it does**: Watches your **keystrokes** inside selected desktop applications (ChatGPT, Claude, Slack, etc.) and alerts you if you type sensitive data.
+* **How to configure**: On first run, a popup asks which apps to monitor. Settings are saved to `~/.vantix/desktop_guard.json`.
+* **Libraries used**:
+  * `pynput` — low-level keyboard hook
+  * `pygetwindow` — detects active window title
+  * `phonenumbers` — validates phone numbers using Google's library
+
 
 ## 🚦 Getting Started
 
@@ -77,7 +108,20 @@ Run the development server:
 npm run dev
 ```
 
-### 3. Load the Chrome Extension
+### 3. Setup the Clipboard Agent (Python)
+```bash
+cd vantix-agent
+python -m pip install pyperclip requests win10toast
+python agent.py
+```
+
+### 4. Setup Custom Presidio Service (Python)
+```bash
+python -m pip install flask presidio-analyzer
+python presidio_custom.py
+```
+
+### 5. Load the Chrome Extension
 1. Open Google Chrome and navigate to `chrome://extensions/`
 2. Enable **"Developer mode"** in the top right corner.
 3. Click **"Load unpacked"** and select the `vantix-extension-v2` folder.

@@ -72,4 +72,52 @@ router.get(
   })
 );
 
+// @route   GET /api/analytics/trends
+// @desc    Get daily violation counts for the last 14 days
+// @access  Private/Admin
+router.get(
+  "/trends",
+  [authMiddleware, adminMiddleware],
+  asyncHandler(async (req, res) => {
+    const orgId = new mongoose.Types.ObjectId(req.orgId);
+    
+    // Calculate the date 14 days ago
+    const pastDate = new Date();
+    pastDate.setDate(pastDate.getDate() - 13);
+    pastDate.setHours(0, 0, 0, 0);
+
+    const pipeline = [
+      {
+        $match: {
+          orgId: orgId,
+          timestamp: { $gte: pastDate }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$timestamp" }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ];
+
+    const results = await Violation.aggregate(pipeline);
+    
+    // Fill in missing days with 0
+    const trends = [];
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(pastDate);
+      d.setDate(d.getDate() + i);
+      const dateStr = d.toISOString().split('T')[0];
+      const found = results.find(r => r._id === dateStr);
+      trends.push(found ? found.count : 0);
+    }
+
+    res.json({ success: true, trends });
+  })
+);
+
 module.exports = router;

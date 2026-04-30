@@ -274,7 +274,7 @@ function checkLoginState() {
       loadSettings();
     } else {
       console.log("[Vantix] User is not logged in");
-      showView("login-view");
+      showView("entry-view");
     }
   });
 }

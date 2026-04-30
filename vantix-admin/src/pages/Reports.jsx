@@ -260,6 +260,7 @@ const Reports = () => {
     setShowExportMenu(false);
     if (format === "pdf")  return exportPDF(period);
     if (format === "docx") return exportDOCX(report, period);
+    if (format === "csv")  return exportCSV(report, period);
   };
 
   const COLORS = ["#25e6d9", "rgba(255,176,32,0.8)", "rgba(255,77,77,0.7)"];
@@ -353,6 +354,7 @@ const Reports = () => {
                 {[
                   { key: "pdf",  label: "PDF Document",  icon: "\uD83D\uDCC4", desc: "Print-ready format" },
                   { key: "docx", label: "Word Document",  icon: "\uD83D\uDCDD", desc: "Editable .doc file" },
+                  { key: "csv",  label: "Spreadsheet",     icon: "\uD83D\uDCCA", desc: "Raw data for Excel" },
                 ].map((opt) => (
                   <button
                     key={opt.key}

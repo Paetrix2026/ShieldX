@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../utils/api';
-import { Shield, ExternalLink, Search, Calendar, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { Shield, AlertCircle, ExternalLink, Search, Filter, Calendar, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 
 const Violations = () => {
     const [violations, setViolations] = useState([]);
@@ -12,7 +11,7 @@ const Violations = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [stats, setStats] = useState({});
 
-    const fetchViolations = async () => {
+    const fetchViolations = useCallback(async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams({
@@ -36,11 +35,11 @@ const Violations = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [page, filterType, searchTerm]);
 
     useEffect(() => {
         fetchViolations();
-    }, [page, filterType, searchTerm]);
+    }, [fetchViolations]);
 
     const getSeverity = (type) => {
         const critical = ['Credit Card', 'API Key', 'Aadhaar Number', 'PAN Number'];
@@ -48,242 +47,174 @@ const Violations = () => {
         return 'High';
     };
 
-    // Animation variants
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: { staggerChildren: 0.08 }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: 15 },
-        visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
-    };
-
-    const rowVariants = {
-        hidden: { opacity: 0, x: -10 },
-        visible: { opacity: 1, x: 0 },
-        exit: { opacity: 0, x: 10, transition: { duration: 0.15 } }
-    };
-
-    const inputStyle = {
-        padding: "8px 14px",
-        fontSize: 13,
-        background: "var(--bg-secondary)",
-        border: "1px solid var(--border-color)",
-        borderRadius: 12,
-        color: "var(--text-primary)",
-        outline: "none",
-        minWidth: 200,
-        transition: "border-color 0.2s"
-    };
-
     return (
-        <motion.div 
-            className="grid" 
-            style={{ gap: 20 }}
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-        >
-            <motion.header variants={itemVariants} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="flex flex-col gap-6">
+            <header className="flex justify-between items-center">
                 <div>
-                    <h1 style={{ margin: 0, fontSize: 24, fontWeight: 600, letterSpacing: 0.3 }}>Violation Audit Log</h1>
-                    <p style={{ margin: "4px 0 0", color: "var(--text-secondary)", fontSize: 14 }}>Detailed history of all blocked data leakage attempts.</p>
+                    <h1 className="text-2xl font-bold text-white">Violation Audit Log</h1>
+                    <p className="text-slate-400">Detailed history of all blocked data leakage attempts.</p>
                 </div>
-                <div>
-                    <button onClick={fetchViolations} className="btn btn--primary" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Shield size={16} />
-                        Refresh
+                <div className="flex gap-3">
+                    <button onClick={fetchViolations} className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                        <Shield size={20} className="text-blue-400" />
                     </button>
                 </div>
-            </motion.header>
+            </header>
 
             {/* Quick Stats */}
-            <motion.div variants={itemVariants} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
-                <div className="card">
-                    <div className="card__head"><p className="card__title">Total Blocked</p></div>
-                    <div className="card__body metric">
-                        <div className="value" style={{ color: "var(--brand)" }}>{stats.total || 0}</div>
-                        <div className="hint">All time</div>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="glass-card p-4">
+                    <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">Total Blocked</p>
+                    <p className="text-2xl font-bold text-white">{stats.total || 0}</p>
                 </div>
-                <div className="card">
-                    <div className="card__head"><p className="card__title">Critical Leaks</p></div>
-                    <div className="card__body metric">
-                        <div className="value" style={{ color: "var(--danger)" }}>{stats['Credit Card'] || 0}</div>
-                        <div className="hint">Payment info</div>
-                    </div>
+                <div className="glass-card p-4">
+                    <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">Critical Leaks</p>
+                    <p className="text-2xl font-bold text-red-500">{stats['Credit Card'] || 0}</p>
                 </div>
-                <div className="card">
-                    <div className="card__head"><p className="card__title">Unique Users</p></div>
-                    <div className="card__body metric">
-                        <div className="value" style={{ color: "var(--brand-2)" }}>{stats.uniqueUsers || 0}</div>
-                        <div className="hint">Active offenders</div>
-                    </div>
+                <div className="glass-card p-4">
+                    <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">Unique Users</p>
+                    <p className="text-2xl font-bold text-blue-400">{stats.uniqueUsers || 0}</p>
                 </div>
-                <div className="card">
-                    <div className="card__head"><p className="card__title">Top Platform</p></div>
-                    <div className="card__body metric">
-                        <div className="value" style={{ color: "var(--ok)", fontSize: 32 }}>ChatGPT</div>
-                        <div className="hint">Most targeted</div>
-                    </div>
+                <div className="glass-card p-4">
+                    <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">Top Platform</p>
+                    <p className="text-2xl font-bold text-green-400">ChatGPT</p>
                 </div>
-            </motion.div>
+            </div>
 
-            {/* Filters & Table */}
-            <motion.section variants={itemVariants} className="card">
-                <div className="card__head" style={{ borderBottom: "1px solid var(--border-color)", paddingBottom: 16 }}>
-                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-                        <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
-                            <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} size={16} />
-                            <input 
-                                type="text" 
-                                placeholder="Search by user email or URL..." 
-                                style={{ ...inputStyle, paddingLeft: 38, width: '100%' }}
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        <select 
-                            style={inputStyle}
-                            value={filterType}
-                            onChange={(e) => setFilterType(e.target.value)}
-                        >
-                            <option value="">All Violation Types</option>
-                            <option value="Credit Card">Credit Card</option>
-                            <option value="API Key">API Key</option>
-                            <option value="Email">Email</option>
-                            <option value="Phone">Phone</option>
-                            <option value="Keyword">Keyword</option>
-                        </select>
-                        <button className="btn" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <Calendar size={16} />
-                            <span>Last 30 Days</span>
-                        </button>
-                    </div>
+            {/* Filters */}
+            <div className="glass-card flex flex-wrap gap-4 items-center">
+                <div className="relative flex-1 min-w-[200px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                    <input 
+                        type="text" 
+                        placeholder="Search by user email or URL..." 
+                        className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-blue-500"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
-                
-                <div style={{ overflowX: "auto" }}>
-                    <table className="table" style={{ minWidth: 800 }}>
-                        <thead>
+                <select 
+                    className="bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:outline-none focus:border-blue-500"
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
+                >
+                    <option value="">All Types</option>
+                    <option value="Credit Card">Credit Card</option>
+                    <option value="API Key">API Key</option>
+                    <option value="Email">Email</option>
+                    <option value="Phone">Phone</option>
+                    <option value="Keyword">Keyword</option>
+                </select>
+                <button className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10">
+                    <Calendar size={16} />
+                    <span>Last 30 Days</span>
+                </button>
+            </div>
+
+            {/* Table */}
+            <div className="glass-card overflow-hidden !p-0">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead className="bg-white/5 text-slate-400 text-xs uppercase tracking-wider">
                             <tr>
-                                <th>Timestamp</th>
-                                <th>Employee</th>
-                                <th>Platform / URL</th>
-                                <th>Violation Types</th>
-                                <th>Severity</th>
-                                <th style={{ textAlign: 'right' }}>Action</th>
+                                <th className="px-6 py-4">Timestamp</th>
+                                <th className="px-6 py-4">Employee</th>
+                                <th className="px-6 py-4">Platform / URL</th>
+                                <th className="px-6 py-4">Violation Type</th>
+                                <th className="px-6 py-4">Severity</th>
+                                <th className="px-6 py-4">Action</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <AnimatePresence mode="popLayout">
-                                {loading && violations.length === 0 ? (
-                                    <motion.tr key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                        <td colSpan={6} style={{ textAlign: "center", padding: "40px 0", color: "var(--empty-state-text)" }}>
-                                            Loading violations...
-                                        </td>
-                                    </motion.tr>
-                                ) : violations.length === 0 ? (
-                                    <motion.tr key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                        <td colSpan={6} style={{ textAlign: "center", padding: "60px 0", color: "var(--empty-state-text)" }}>
-                                            <Shield size={32} style={{ opacity: 0.5, margin: "0 auto 12px" }} />
-                                            No violations found matching your criteria.
-                                        </td>
-                                    </motion.tr>
-                                ) : (
-                                    violations.map((v) => {
-                                        const severity = getSeverity(v.matches?.[0]?.type);
-                                        const isCritical = severity === 'Critical';
-                                        
-                                        return (
-                                            <motion.tr 
-                                                key={v._id} 
-                                                variants={rowVariants}
-                                                initial="hidden"
-                                                animate="visible"
-                                                exit="exit"
-                                                layout
-                                            >
-                                                <td style={{ color: "var(--text-secondary)", fontSize: 12 }}>
-                                                    {new Date(v.timestamp).toLocaleString()}
-                                                </td>
-                                                <td>
-                                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                        <span style={{ fontWeight: 500, color: "var(--text-primary)" }}>{v.email || 'Anonymous'}</span>
-                                                        <span style={{ fontSize: 10, color: "var(--text-secondary)" }}>ID: {v.userId || 'N/A'}</span>
-                                                    </div>
-                                                </td>
-                                                <td style={{ maxWidth: 220 }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                        <ExternalLink size={14} style={{ color: "var(--brand)", flexShrink: 0 }} />
-                                                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "rgba(124,243,255,.92)" }} title={v.url}>
-                                                            {v.url}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                                        {(v.matches || []).map((m, idx) => (
-                                                            <span key={idx} className="badge badge--employee" style={{ fontSize: 10, padding: "2px 8px" }}>
-                                                                {m.type}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span className="badge" style={{ 
-                                                        fontSize: 10, 
-                                                        padding: "2px 8px",
-                                                        borderColor: isCritical ? "rgba(255,77,109,.35)" : "rgba(255,176,32,.35)",
-                                                        background: isCritical ? "rgba(255,77,109,.10)" : "rgba(255,176,32,.10)",
-                                                        color: isCritical ? "var(--danger)" : "var(--warn)"
-                                                    }}>
-                                                        {severity}
-                                                    </span>
-                                                </td>
-                                                <td style={{ textAlign: 'right' }}>
-                                                    <button className="btn btn--ghost" style={{ padding: "6px 10px", height: "auto" }}>
-                                                        <Eye size={16} />
-                                                    </button>
-                                                </td>
-                                            </motion.tr>
-                                        );
-                                    })
-                                )}
-                            </AnimatePresence>
+                        <tbody className="divide-y divide-white/5">
+                            {loading && (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                            <span>Refreshing log...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                            {!loading && violations.length === 0 && (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                                        No violations found matching your criteria.
+                                    </td>
+                                </tr>
+                            )}
+                            {!loading && violations.map((v) => (
+                                <tr key={v._id} className="hover:bg-white/5 transition-colors">
+                                    <td className="px-6 py-4 text-sm whitespace-nowrap">
+                                        {new Date(v.timestamp).toLocaleString()}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-col">
+                                            <span className="text-white font-medium">{v.email || 'Anonymous'}</span>
+                                            <span className="text-[10px] text-slate-500">ID: {v.userId || 'N/A'}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 max-w-xs">
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <ExternalLink size={14} className="text-blue-400 flex-shrink-0" />
+                                            <span className="truncate text-slate-300 text-sm" title={v.url}>
+                                                {v.url}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-wrap gap-1">
+                                            {(v.matches || []).map((m, idx) => (
+                                                <span key={idx} className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] rounded border border-blue-500/20 font-bold uppercase">
+                                                    {m.type}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className={`px-2 py-0.5 text-[10px] rounded font-bold uppercase ${
+                                            getSeverity(v.matches?.[0]?.type) === 'Critical' 
+                                            ? 'bg-red-500/10 text-red-500 border border-red-500/20' 
+                                            : 'bg-orange-500/10 text-orange-500 border border-orange-500/20'
+                                        }`}>
+                                            {getSeverity(v.matches?.[0]?.type)}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <button className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors">
+                                            <Eye size={16} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>
 
                 {/* Pagination */}
-                <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-color)" }}>
-                    <p style={{ margin: 0, fontSize: 13, color: "var(--text-secondary)" }}>
-                        Showing <strong style={{ color: "var(--text-primary)" }}>{violations.length > 0 ? (page - 1) * 15 + 1 : 0}</strong> to <strong style={{ color: "var(--text-primary)" }}>{Math.min(page * 15, stats.total || 0)}</strong> of <strong style={{ color: "var(--text-primary)" }}>{stats.total || 0}</strong> results
+                <div className="px-6 py-4 bg-white/5 flex justify-between items-center border-t border-white/10">
+                    <p className="text-sm text-slate-400">
+                        Showing <span className="text-white">{violations.length > 0 ? (page - 1) * 15 + 1 : 0}</span> to <span className="text-white">{Math.min(page * 15, violations.length)}</span> of <span className="text-white">{stats.total || 0}</span> results
                     </p>
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div className="flex gap-2">
                         <button 
                             onClick={() => setPage(p => Math.max(1, p - 1))} 
                             disabled={page === 1}
-                            className="btn"
-                            style={{ padding: "8px", height: "auto", opacity: page === 1 ? 0.5 : 1, cursor: page === 1 ? 'not-allowed' : 'pointer' }}
+                            className="p-2 bg-white/5 border border-white/10 rounded-lg disabled:opacity-30 hover:bg-white/10 transition-colors"
                         >
                             <ChevronLeft size={16} />
                         </button>
                         <button 
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
-                            disabled={page === totalPages || totalPages === 0}
-                            className="btn"
-                            style={{ padding: "8px", height: "auto", opacity: (page === totalPages || totalPages === 0) ? 0.5 : 1, cursor: (page === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer' }}
+                            disabled={page === totalPages}
+                            className="p-2 bg-white/5 border border-white/10 rounded-lg disabled:opacity-30 hover:bg-white/10 transition-colors"
                         >
                             <ChevronRight size={16} />
                         </button>
                     </div>
                 </div>
-            </motion.section>
-        </motion.div>
+            </div>
+        </div>
     );
 };
 

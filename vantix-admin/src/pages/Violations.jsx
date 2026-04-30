@@ -48,140 +48,364 @@ const Violations = () => {
     };
 
     return (
-        <div className="flex flex-col gap-6">
-            <header className="flex justify-between items-center">
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px", fontFamily: "'Inter', sans-serif" }}>
+            
+            {/* Header */}
+            <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Violation Audit Log</h1>
-                    <p className="text-slate-400">Detailed history of all blocked data leakage attempts.</p>
+                    <h1 style={{ fontSize: "28px", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 4px 0", letterSpacing: "-0.5px" }}>
+                        Violation Audit Log
+                    </h1>
+                    <p style={{ color: "var(--text-secondary)", margin: 0, fontSize: "14px" }}>
+                        Detailed history of all blocked data leakage attempts across the ecosystem.
+                    </p>
                 </div>
-                <div className="flex gap-3">
-                    <button onClick={fetchViolations} className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
-                        <Shield size={20} className="text-blue-400" />
+                <div style={{ display: "flex", gap: "12px" }}>
+                    <button 
+                        onClick={fetchViolations} 
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "10px",
+                            background: "var(--bg-secondary)",
+                            border: "1px solid var(--border-color)",
+                            borderRadius: "12px",
+                            cursor: "pointer",
+                            color: "#00E5FF",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                            transition: "all 0.2s ease"
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.borderColor = "#00E5FF"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.borderColor = "var(--border-color)"; }}
+                    >
+                        <Shield size={20} />
                     </button>
                 </div>
             </header>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="glass-card p-4">
-                    <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">Total Blocked</p>
-                    <p className="text-2xl font-bold text-white">{stats.total || 0}</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px" }}>
+                
+                {/* Total Blocked */}
+                <div style={{
+                    background: "var(--bg-secondary)",
+                    border: "1px solid var(--border-color)",
+                    borderRadius: "16px",
+                    padding: "20px",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.04)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                    position: "relative",
+                    overflow: "hidden"
+                }}>
+                    <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "100px", height: "100px", background: "rgba(0, 229, 255, 0.1)", filter: "blur(30px)", borderRadius: "50%" }}></div>
+                    <p style={{ margin: 0, fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px", fontWeight: "600", color: "var(--text-secondary)" }}>Total Blocked</p>
+                    <p style={{ 
+                        margin: 0, 
+                        fontSize: "36px", 
+                        fontWeight: "800", 
+                        background: "linear-gradient(90deg, #00FFC2, #00E5FF)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        letterSpacing: "-1px"
+                    }}>{stats.total || 0}</p>
                 </div>
-                <div className="glass-card p-4">
-                    <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">Critical Leaks</p>
-                    <p className="text-2xl font-bold text-red-500">{stats['Credit Card'] || 0}</p>
+
+                {/* Critical Leaks */}
+                <div style={{
+                    background: "var(--bg-secondary)",
+                    border: "1px solid var(--border-color)",
+                    borderRadius: "16px",
+                    padding: "20px",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.04)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                    position: "relative",
+                    overflow: "hidden"
+                }}>
+                    <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "100px", height: "100px", background: "rgba(255, 77, 109, 0.1)", filter: "blur(30px)", borderRadius: "50%" }}></div>
+                    <p style={{ margin: 0, fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px", fontWeight: "600", color: "var(--text-secondary)" }}>Critical Leaks</p>
+                    <p style={{ 
+                        margin: 0, 
+                        fontSize: "36px", 
+                        fontWeight: "800", 
+                        background: "linear-gradient(90deg, #FF4D6D, #FF758F)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        letterSpacing: "-1px"
+                    }}>{stats['Credit Card'] || 0}</p>
                 </div>
-                <div className="glass-card p-4">
-                    <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">Unique Users</p>
-                    <p className="text-2xl font-bold text-blue-400">{stats.uniqueUsers || 0}</p>
+
+                {/* Unique Users */}
+                <div style={{
+                    background: "var(--bg-secondary)",
+                    border: "1px solid var(--border-color)",
+                    borderRadius: "16px",
+                    padding: "20px",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.04)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                    position: "relative",
+                    overflow: "hidden"
+                }}>
+                    <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "100px", height: "100px", background: "rgba(56, 189, 248, 0.1)", filter: "blur(30px)", borderRadius: "50%" }}></div>
+                    <p style={{ margin: 0, fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px", fontWeight: "600", color: "var(--text-secondary)" }}>Unique Users</p>
+                    <p style={{ 
+                        margin: 0, 
+                        fontSize: "36px", 
+                        fontWeight: "800", 
+                        background: "linear-gradient(90deg, #38BDF8, #818CF8)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        letterSpacing: "-1px"
+                    }}>{stats.uniqueUsers || 0}</p>
                 </div>
-                <div className="glass-card p-4">
-                    <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">Top Platform</p>
-                    <p className="text-2xl font-bold text-green-400">ChatGPT</p>
+
+                {/* Top Platform */}
+                <div style={{
+                    background: "var(--bg-secondary)",
+                    border: "1px solid var(--border-color)",
+                    borderRadius: "16px",
+                    padding: "20px",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.04)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                    position: "relative",
+                    overflow: "hidden"
+                }}>
+                    <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "100px", height: "100px", background: "rgba(46, 229, 157, 0.1)", filter: "blur(30px)", borderRadius: "50%" }}></div>
+                    <p style={{ margin: 0, fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px", fontWeight: "600", color: "var(--text-secondary)" }}>Top Platform</p>
+                    <p style={{ 
+                        margin: 0, 
+                        fontSize: "28px", 
+                        fontWeight: "800", 
+                        background: "linear-gradient(90deg, #2EE59D, #00FFC2)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        letterSpacing: "-0.5px",
+                        lineHeight: "42px"
+                    }}>ChatGPT</p>
                 </div>
             </div>
 
             {/* Filters */}
-            <div className="glass-card flex flex-wrap gap-4 items-center">
-                <div className="relative flex-1 min-w-[200px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+            <div style={{
+                background: "var(--bg-secondary)",
+                border: "1px solid var(--border-color)",
+                borderRadius: "16px",
+                padding: "16px",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "16px",
+                alignItems: "center"
+            }}>
+                {/* Search */}
+                <div style={{ flex: "1 1 250px", position: "relative" }}>
+                    <Search size={16} color="var(--text-secondary)" style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)" }} />
                     <input 
                         type="text" 
                         placeholder="Search by user email or URL..." 
-                        className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-blue-500"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{
+                            width: "100%",
+                            height: "44px",
+                            padding: "0 16px 0 44px",
+                            borderRadius: "22px",
+                            border: "1px solid var(--border-color)",
+                            background: "var(--bg-primary)",
+                            color: "var(--text-primary)",
+                            fontSize: "14px",
+                            outline: "none",
+                            boxSizing: "border-box",
+                            transition: "all 0.2s ease"
+                        }}
+                        onFocus={(e) => { e.target.style.borderColor = "#00E5FF"; e.target.style.boxShadow = "0 0 0 3px rgba(0,229,255,0.1)"; }}
+                        onBlur={(e) => { e.target.style.borderColor = "var(--border-color)"; e.target.style.boxShadow = "none"; }}
                     />
                 </div>
-                <select 
-                    className="bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:outline-none focus:border-blue-500"
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                >
-                    <option value="">All Types</option>
-                    <option value="Credit Card">Credit Card</option>
-                    <option value="API Key">API Key</option>
-                    <option value="Email">Email</option>
-                    <option value="Phone">Phone</option>
-                    <option value="Keyword">Keyword</option>
-                </select>
-                <button className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10">
-                    <Calendar size={16} />
+
+                {/* Dropdown */}
+                <div style={{ position: "relative" }}>
+                    <select 
+                        value={filterType}
+                        onChange={(e) => setFilterType(e.target.value)}
+                        style={{
+                            height: "44px",
+                            padding: "0 40px 0 20px",
+                            borderRadius: "22px",
+                            border: "1px solid var(--border-color)",
+                            background: "var(--bg-primary)",
+                            color: "var(--text-primary)",
+                            fontSize: "14px",
+                            outline: "none",
+                            appearance: "none",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease"
+                        }}
+                        onFocus={(e) => { e.target.style.borderColor = "#00E5FF"; e.target.style.boxShadow = "0 0 0 3px rgba(0,229,255,0.1)"; }}
+                        onBlur={(e) => { e.target.style.borderColor = "var(--border-color)"; e.target.style.boxShadow = "none"; }}
+                    >
+                        <option value="">All Types</option>
+                        <option value="Credit Card">Credit Card</option>
+                        <option value="API Key">API Key</option>
+                        <option value="Email">Email</option>
+                        <option value="Phone">Phone</option>
+                        <option value="Keyword">Keyword</option>
+                    </select>
+                    <Filter size={14} color="var(--text-secondary)" style={{ position: "absolute", right: "16px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                </div>
+
+                {/* Date Filter */}
+                <button style={{
+                    height: "44px",
+                    padding: "0 20px",
+                    borderRadius: "22px",
+                    border: "1px solid var(--border-color)",
+                    background: "var(--bg-primary)",
+                    color: "var(--text-primary)",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00E5FF"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-color)"; }}>
+                    <Calendar size={16} color="var(--text-secondary)" />
                     <span>Last 30 Days</span>
                 </button>
             </div>
 
-            {/* Table */}
-            <div className="glass-card overflow-hidden !p-0">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-white/5 text-slate-400 text-xs uppercase tracking-wider">
+            {/* Table Card */}
+            <div style={{
+                background: "var(--bg-secondary)",
+                border: "1px solid var(--border-color)",
+                borderRadius: "16px",
+                overflow: "hidden",
+                boxShadow: "0 12px 32px rgba(0,0,0,0.06)"
+            }}>
+                <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                        <thead style={{ background: "var(--panel)", borderBottom: "1px solid var(--border-color)" }}>
                             <tr>
-                                <th className="px-6 py-4">Timestamp</th>
-                                <th className="px-6 py-4">Employee</th>
-                                <th className="px-6 py-4">Platform / URL</th>
-                                <th className="px-6 py-4">Violation Type</th>
-                                <th className="px-6 py-4">Severity</th>
-                                <th className="px-6 py-4">Action</th>
+                                <th style={{ padding: "16px 24px", fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "1px" }}>Timestamp</th>
+                                <th style={{ padding: "16px 24px", fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "1px" }}>Employee</th>
+                                <th style={{ padding: "16px 24px", fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "1px" }}>Platform / URL</th>
+                                <th style={{ padding: "16px 24px", fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "1px" }}>Violation Type</th>
+                                <th style={{ padding: "16px 24px", fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "1px" }}>Severity</th>
+                                <th style={{ padding: "16px 24px", fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "1px" }}>Action</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody>
                             {loading && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                                            <span>Refreshing log...</span>
+                                    <td colSpan={6} style={{ padding: "60px", textAlign: "center", color: "var(--text-secondary)" }}>
+                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+                                            <div style={{ width: "24px", height: "24px", border: "3px solid var(--border-color)", borderTopColor: "#00E5FF", borderRadius: "50%", animation: "spin 1s linear infinite" }}></div>
+                                            <span style={{ fontSize: "14px" }}>Refreshing secure logs...</span>
+                                            <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
                                         </div>
                                     </td>
                                 </tr>
                             )}
                             {!loading && violations.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                                    <td colSpan={6} style={{ padding: "60px", textAlign: "center", color: "var(--text-secondary)", fontSize: "14px" }}>
                                         No violations found matching your criteria.
                                     </td>
                                 </tr>
                             )}
-                            {!loading && violations.map((v) => (
-                                <tr key={v._id} className="hover:bg-white/5 transition-colors">
-                                    <td className="px-6 py-4 text-sm whitespace-nowrap">
+                            {!loading && violations.map((v, index) => (
+                                <tr key={v._id} style={{ 
+                                    borderBottom: index !== violations.length - 1 ? "1px solid var(--border-color)" : "none",
+                                    transition: "background 0.2s ease"
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = "var(--panel)"}
+                                onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                                >
+                                    <td style={{ padding: "16px 24px", fontSize: "13px", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
                                         {new Date(v.timestamp).toLocaleString()}
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex flex-col">
-                                            <span className="text-white font-medium">{v.email || 'Anonymous'}</span>
-                                            <span className="text-[10px] text-slate-500">ID: {v.userId || 'N/A'}</span>
+                                    <td style={{ padding: "16px 24px" }}>
+                                        <div style={{ display: "flex", flexDirection: "column" }}>
+                                            <span style={{ fontSize: "14px", fontWeight: "500", color: "var(--text-primary)" }}>{v.email || 'Anonymous'}</span>
+                                            <span style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "2px" }}>ID: {v.userId || 'N/A'}</span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 max-w-xs">
-                                        <div className="flex items-center gap-2 overflow-hidden">
-                                            <ExternalLink size={14} className="text-blue-400 flex-shrink-0" />
-                                            <span className="truncate text-slate-300 text-sm" title={v.url}>
+                                    <td style={{ padding: "16px 24px", maxWidth: "250px" }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                            <ExternalLink size={14} color="#00E5FF" style={{ flexShrink: 0 }} />
+                                            <span style={{ fontSize: "13px", color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={v.url}>
                                                 {v.url}
                                             </span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex flex-wrap gap-1">
+                                    <td style={{ padding: "16px 24px" }}>
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                                             {(v.matches || []).map((m, idx) => (
-                                                <span key={idx} className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] rounded border border-blue-500/20 font-bold uppercase">
+                                                <span key={idx} style={{ 
+                                                    padding: "4px 10px", 
+                                                    background: "rgba(37, 230, 217, 0.1)", 
+                                                    color: "#25E6D9", 
+                                                    border: "1px solid rgba(37, 230, 217, 0.2)",
+                                                    borderRadius: "6px",
+                                                    fontSize: "10px",
+                                                    fontWeight: "700",
+                                                    textTransform: "uppercase",
+                                                    letterSpacing: "0.5px"
+                                                }}>
                                                     {m.type}
                                                 </span>
                                             ))}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-0.5 text-[10px] rounded font-bold uppercase ${
-                                            getSeverity(v.matches?.[0]?.type) === 'Critical' 
-                                            ? 'bg-red-500/10 text-red-500 border border-red-500/20' 
-                                            : 'bg-orange-500/10 text-orange-500 border border-orange-500/20'
-                                        }`}>
+                                    <td style={{ padding: "16px 24px" }}>
+                                        <span style={{ 
+                                            display: "inline-block",
+                                            padding: "4px 12px",
+                                            borderRadius: "999px",
+                                            fontSize: "10px",
+                                            fontWeight: "800",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.5px",
+                                            ...(getSeverity(v.matches?.[0]?.type) === 'Critical' ? {
+                                                background: "rgba(255, 77, 109, 0.1)",
+                                                color: "#FF4D6D",
+                                                border: "1px solid rgba(255, 77, 109, 0.2)",
+                                                boxShadow: "0 0 10px rgba(255, 77, 109, 0.1)"
+                                            } : {
+                                                background: "rgba(255, 176, 32, 0.1)",
+                                                color: "#FFB020",
+                                                border: "1px solid rgba(255, 176, 32, 0.2)",
+                                                boxShadow: "0 0 10px rgba(255, 176, 32, 0.1)"
+                                            })
+                                        }}>
                                             {getSeverity(v.matches?.[0]?.type)}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <button className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors">
+                                    <td style={{ padding: "16px 24px" }}>
+                                        <button style={{ 
+                                            background: "var(--bg-primary)", 
+                                            border: "1px solid var(--border-color)", 
+                                            padding: "8px", 
+                                            borderRadius: "8px", 
+                                            cursor: "pointer",
+                                            color: "var(--text-secondary)",
+                                            transition: "all 0.2s ease",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center"
+                                        }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.color = "#00E5FF"; e.currentTarget.style.borderColor = "#00E5FF"; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-secondary)"; e.currentTarget.style.borderColor = "var(--border-color)"; }}
+                                        >
                                             <Eye size={16} />
                                         </button>
                                     </td>
@@ -192,22 +416,51 @@ const Violations = () => {
                 </div>
 
                 {/* Pagination */}
-                <div className="px-6 py-4 bg-white/5 flex justify-between items-center border-t border-white/10">
-                    <p className="text-sm text-slate-400">
-                        Showing <span className="text-white">{violations.length > 0 ? (page - 1) * 15 + 1 : 0}</span> to <span className="text-white">{Math.min(page * 15, violations.length)}</span> of <span className="text-white">{stats.total || 0}</span> results
+                <div style={{ 
+                    padding: "16px 24px", 
+                    background: "var(--panel)", 
+                    borderTop: "1px solid var(--border-color)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center"
+                }}>
+                    <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>
+                        Showing <span style={{ fontWeight: "600", color: "var(--text-primary)" }}>{violations.length > 0 ? (page - 1) * 15 + 1 : 0}</span> to <span style={{ fontWeight: "600", color: "var(--text-primary)" }}>{Math.min(page * 15, violations.length)}</span> of <span style={{ fontWeight: "600", color: "var(--text-primary)" }}>{stats.total || 0}</span> results
                     </p>
-                    <div className="flex gap-2">
+                    <div style={{ display: "flex", gap: "8px" }}>
                         <button 
                             onClick={() => setPage(p => Math.max(1, p - 1))} 
                             disabled={page === 1}
-                            className="p-2 bg-white/5 border border-white/10 rounded-lg disabled:opacity-30 hover:bg-white/10 transition-colors"
+                            style={{
+                                padding: "8px",
+                                borderRadius: "8px",
+                                background: "var(--bg-primary)",
+                                border: "1px solid var(--border-color)",
+                                color: "var(--text-primary)",
+                                cursor: page === 1 ? "not-allowed" : "pointer",
+                                opacity: page === 1 ? 0.4 : 1,
+                                transition: "all 0.2s"
+                            }}
+                            onMouseEnter={(e) => { if(page !== 1) e.currentTarget.style.borderColor = "#00E5FF"; }}
+                            onMouseLeave={(e) => { if(page !== 1) e.currentTarget.style.borderColor = "var(--border-color)"; }}
                         >
                             <ChevronLeft size={16} />
                         </button>
                         <button 
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
                             disabled={page === totalPages}
-                            className="p-2 bg-white/5 border border-white/10 rounded-lg disabled:opacity-30 hover:bg-white/10 transition-colors"
+                            style={{
+                                padding: "8px",
+                                borderRadius: "8px",
+                                background: "var(--bg-primary)",
+                                border: "1px solid var(--border-color)",
+                                color: "var(--text-primary)",
+                                cursor: page === totalPages ? "not-allowed" : "pointer",
+                                opacity: page === totalPages ? 0.4 : 1,
+                                transition: "all 0.2s"
+                            }}
+                            onMouseEnter={(e) => { if(page !== totalPages) e.currentTarget.style.borderColor = "#00E5FF"; }}
+                            onMouseLeave={(e) => { if(page !== totalPages) e.currentTarget.style.borderColor = "var(--border-color)"; }}
                         >
                             <ChevronRight size={16} />
                         </button>

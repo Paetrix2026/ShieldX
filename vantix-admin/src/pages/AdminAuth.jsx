@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import api from "../utils/api";
 import logo from "../assets/vantix-logo.svg";
-
-import { auth } from "../firebase";
-import {
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  GithubAuthProvider,
-  signInWithPopup
-} from "firebase/auth";
 
 const AdminAuth = () => {
   const [email, setEmail] = useState("");
@@ -36,12 +29,19 @@ const AdminAuth = () => {
     if (!email || !password) return;
     try {
       setBusy(true);
-      const res = await signInWithEmailAndPassword(auth, email, password);
-      const token = await res.user.getIdToken();
-      sessionStorage.setItem("vantixAdminToken", token);
-      navigate("/");
+      setError("");
+      
+      const res = await api.post("/auth/admin-login", { email, password });
+      
+      if (res.data.success) {
+        sessionStorage.setItem("vantixAdminToken", res.data.token);
+        navigate("/");
+      } else {
+        setError(res.data.error || "Login failed");
+      }
     } catch (err) {
-      setError(err.code);
+      console.error("Login error:", err);
+      setError(err.response?.data?.error || "Invalid email or password");
     } finally {
       setBusy(false);
     }

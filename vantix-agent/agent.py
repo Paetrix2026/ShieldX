@@ -52,28 +52,17 @@ BACKEND     = "http://localhost:5000/api"
 
 CRITICAL_PATTERNS = {
     "PAN Card":        r'\b[A-Z]{5}[0-9]{4}[A-Z]\b',
-    "Aadhaar":         r'(?<!\d)\d{4}[\s\-]?\d{4}[\s\-]?\d{4}(?!\d)',
-    "Credit Card":     r'(?<!\d)(?:\d{4}[\s\-]?){3}\d{4}(?!\d)',
-    "Bank Account":    r'(?<!\+)(?<!\d)\d{9,18}(?!\d)',
+    "Aadhaar":         r'\b(?:\d{4}[\s\-]?){2}\d{4}\b',
+    "Credit Card":     r'\b(?:\d{4}[\s\-]?){3}\d{4}\b',
+    "Bank Account":    r'\b(?:\d{4}[\s\-]?){3}\d{4}\b',
     "IFSC Code":       r'\b[A-Z]{4}0[A-Z0-9]{6}\b',
     "OpenAI Key":      r'sk-[a-zA-Z0-9]{16,}',
-    "OpenAI Proj Key": r'sk-proj-[a-zA-Z0-9_\-]{16,}',
-    "AWS Key":         r'AKIA[0-9A-Z]{16}',
-    "GitHub Token":    r'ghp_[a-zA-Z0-9]{36}',
-    "Google API Key":  r'AIza[0-9A-Za-z\-_]{35}',
-    "Stripe Key":      r'sk_live_[0-9a-zA-Z]{24,}',
-    "JWT Token":       r'eyJ[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+',
-    "DB String":       r'(mongodb|mysql|postgresql|redis):\/\/[^\s"\']+',
-    "Private IP":      r'\b(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)\d+\.\d+\b',
-    "ENV Secret":      r'[A-Z_]{3,}(?:KEY|SECRET|TOKEN|PASSWORD|PASS|PWD|API|APIKEY)\s*=\s*\S+',
-    "Generic Secret":  r'(?:export\s+)?[A-Z_]{3,}=["\'`]?[a-zA-Z0-9+/=_\-]{20,}["\'`]?',
-    "Slack Token":     r'xoxb-[0-9]{11}-[0-9]{13}-[a-zA-Z0-9]{24}',
+    "Stripe Key":      r'sk_(?:live|test)_[0-9a-zA-Z]{24,}',
 }
 
 MODERATE_PATTERNS = {
     "Email":           r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}',
-    "Email (hidden)":  r'[a-zA-Z0-9._%+\-]+\s*(?:\(at\)|\[at\]|\bat\b)\s*[a-zA-Z0-9.\-]+\s*(?:\(dot\)|\[dot\]|\bdot\b)\s*[a-zA-Z]{2,}',
-    "Phone":           r'(?<!\d)(?:\+?\d{1,3}[\s\-]?)?(?:\d{10}|\d{3}[\s\-\.]?\d{3}[\s\-\.]?\d{4})(?!\d)',
+    "Phone":           r'\b\d{10}\b',
 }
 
 # Unified lookup for masking — covers all tiers

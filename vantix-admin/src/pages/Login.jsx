@@ -1,12 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../firebase";
-import {
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  GithubAuthProvider,
-  signInWithPopup,
-} from "firebase/auth";
+import api from "../utils/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -18,12 +12,13 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await signInWithEmailAndPassword(auth, email, password);
-      const token = await res.user.getIdToken();
-      sessionStorage.setItem("vantixAdminToken", token);
-      navigate("/");
+      const res = await api.post("/auth/login", { email, password });
+      if (res.data.success) {
+        sessionStorage.setItem("vantixAdminToken", res.data.token);
+        navigate("/");
+      }
     } catch (err) {
-      setError(err.code);
+      setError(err.response?.data?.error || "Invalid credentials");
     }
   };
 

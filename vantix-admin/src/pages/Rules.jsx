@@ -16,7 +16,7 @@ const EMPTY_NUMBER = { label: "", type: "phone", value: "" };
 
 const Rules = () => {
   const [rules, setRules] = useState({
-    domains: [], keywords: [], customPatterns: [], apiKeys: [], sensitiveNumbers: [],
+    domains: [], keywords: [], customPatterns: [], apiKeys: [], sensitiveNumbers: [], monitoredApps: [],
   });
   const [newDomain,  setNewDomain]  = useState("");
   const [newKeyword, setNewKeyword] = useState("");
@@ -76,7 +76,7 @@ const Rules = () => {
     await api.put("/rules", { monitoredApps: updated });
   });
 
-  const totalRules = rules.domains.length + rules.keywords.length + rules.apiKeys.length + rules.sensitiveNumbers.length + (rules.monitoredApps || []).length;
+  const totalRules = rules.domains.length + rules.keywords.length + rules.apiKeys.length + rules.sensitiveNumbers.length + rules.monitoredApps.length;
   const autoDetectedCount = rules.apiKeys.filter(k => k.auto_detected).length;
 
   /* ── shared row style used by all 4 forms ── */

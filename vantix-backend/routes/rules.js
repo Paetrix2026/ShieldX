@@ -12,7 +12,13 @@ async function getRules(orgId) {
   let rules = await Rule.findOne({ orgId });
   if (!rules) {
     console.log(`[Rules] Creating missing rules for org: ${orgId}`);
-    rules = await Rule.create({ orgId, domains: [], keywords: [], customPatterns: [] });
+    rules = await Rule.create({ 
+      orgId, 
+      domains: [], 
+      keywords: [], 
+      customPatterns: [],
+      monitoredApps: ["ChatGPT", "Notepad"] 
+    });
   }
   return rules;
 }
@@ -35,7 +41,14 @@ router.get(
 
     if (!rule) {
       return res.json({
-        companyRules: { domains: [], keywords: [], customPatterns: [], apiKeys: [], sensitiveNumbers: [] },
+        companyRules: { 
+          domains: [], 
+          keywords: [], 
+          customPatterns: [], 
+          apiKeys: [], 
+          sensitiveNumbers: [],
+          monitoredApps: ["ChatGPT", "Notepad"]
+        },
         generalRules: { domains: [], keywords: [], customPatterns: [] },
       });
     }
@@ -67,6 +80,7 @@ router.put(
   [authMiddleware, adminMiddleware],
   asyncHandler(async (req, res) => {
     const { domains, keywords, customPatterns, monitoredApps } = req.body;
+    console.log("[Rules] PUT /api/rules update:", { domains, keywords, customPatterns, monitoredApps });
     const rules = await getRules(req.orgId);
 
     if (Array.isArray(domains))        rules.domains        = domains;

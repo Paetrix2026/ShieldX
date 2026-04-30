@@ -84,7 +84,7 @@ const PATTERNS = {
     check: () => true,
   },
   apiKey: {
-    regex: /\b(sk-[A-Za-z0-9]{20,}|AIza[A-Za-z0-9_\-]{35}|AKIA[A-Z0-9]{16}|gh[pousr]_[A-Za-z0-9]{36,})\b/g,
+    regex: /\b(sk-[A-Za-z0-9]{20,}|sk_(?:live|test)_[A-Za-z0-9]{24,}|AIza[A-Za-z0-9_\-]{35}|AKIA[A-Z0-9]{16}|gh[pousr]_[A-Za-z0-9]{36,})\b/g,
     label: "API key / secret",
     check: () => true,
   },
@@ -96,21 +96,20 @@ const PATTERNS = {
     check: () => true,
   },
   accountNumber: {
-    // Bank account: 9-18 digit strings that are NOT 10 or 12 or 16 digits (phone/aadhaar/card)
-    regex: /(?<!\d)\d{11}(?!\d)|(?<!\d)\d{13,15}(?!\d)|(?<!\d)\d{17,18}(?!\d)/g,
+    // Bank account: Strictly 16 digits (4-4-4-4)
+    regex: /(?<!\d)(?:\d{4}[\s\-]?){3}\d{4}(?!\d)/g,
     label: "Bank Account Number",
     check: () => true,
   },
   phone: {
-    // Exactly 10 bare digits (Indian mobile) OR international format
-    // Strict boundaries prevent matching inside 16-digit card numbers
-    regex: /(?<!\d)[6-9]\d{9}(?!\d)|(?:\+91[\s\-]?)[6-9]\d{9}(?!\d)|(?:\+?[1-9]\d{0,2}[\s\-]?)\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{4}(?!\d)/g,
+    // Exactly 10 digits
+    regex: /(?<!\d)[6-9]\d{9}(?!\d)/g,
     label: "Phone number",
     check: () => true,
   },
   aadhaar: {
-    // Exactly 12 digits in groups of 4 (space-separated) OR contiguous
-    regex: /(?<!\d)\d{4}\s\d{4}\s\d{4}(?!\d)|(?<!\d)[2-9]\d{11}(?!\d)/g,
+    // Exactly 12 digits (4-4-4)
+    regex: /(?<!\d)(?:\d{4}[\s\-]?){2}\d{4}(?!\d)/g,
     label: "Aadhaar Number",
     check: () => true,
   },
@@ -255,7 +254,7 @@ function detectSensitiveData(text) {
     { name: "AWS Key",         regex: /AKIA[0-9A-Z]{16}/ },
     { name: "GitHub Token",    regex: /ghp_[a-zA-Z0-9]{36}/ },
     { name: "Google API Key",  regex: /AIza[0-9A-Za-z\-_]{35}/ },
-    { name: "Stripe Live",     regex: /sk_live_[0-9a-zA-Z]{24,}/ },
+    { name: "Stripe Key",      regex: /sk_(?:live|test)_[0-9a-zA-Z]{24,}/ },
     { name: "JWT Token",       regex: /eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/ },
     { name: "DB Connection",   regex: /(mongodb|mysql|postgresql|redis):\/\/[^\s"']+/ },
     { name: "Private IP",      regex: /\b(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)\d+\.\d+\b/ },

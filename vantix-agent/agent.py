@@ -153,15 +153,16 @@ def get_user_info():
     return {"role": role, "company_id": org_id, "rules": rules, "monitored_apps": monitored_apps}
 
 
-def log_violation(types):
+def log_violation(matches, url="clipboard"):
     """Log the violation to the backend (best-effort)."""
     token = get_token()
     if not token:
         return
     try:
+        # matches expected: [{"type": "Email", "value": "..."}, ...]
         requests.post(
             f"{BACKEND}/violations",
-            json={"url": "clipboard", "matches": [{"type": t} for t in types]},
+            json={"url": url, "matches": matches},
             headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"},
             timeout=2,
         )
@@ -199,11 +200,13 @@ def mask_text(text):
 # ─── Detection helpers ────────────────────────────────────────────────────────
 
 def check_company_rules(text, rules):
+    """Returns list of detections: [{'type': rule_name, 'value': matched_text}, ...]"""
     matched = []
     for rule in rules:
         try:
-            if re.search(rule["pattern"], text):
-                matched.append(rule["name"])
+            m = re.search(rule["pattern"], text)
+            if m:
+                matched.append({"type": rule["name"], "value": m.group()})
         except re.error:
             pass
     return matched
@@ -498,7 +501,8 @@ def show_popup(detections, original_clip, token=None):
 
     def send_anyway():
         if token:
-            log_violation([i["type"] for i in detections])
+            # Log full match details including actual values
+            log_violation([{"type": i["type"], "value": i["value"]} for i in detections])
         print("[Vantix] Popup: SEND ANYWAY (logged)")
         on_close()
 
@@ -569,7 +573,7 @@ def _desktop_violation_handler(hits, text, source):
         )
 
     try:
-        log_violation(types)
+        log_violation(detections, url=source)
     except Exception:
         pass
 
@@ -678,7 +682,7 @@ def main():
                     last_clip = masked
                     _send_notification(
                         "Vantix — Clipboard Masked",
-                        f"{', '.join(company_matches[:3])} auto-masked (company policy)"
+                        f"{', '.join([m['type'] for m in company_matches[:3]])} auto-masked (company policy)"
                     )
                     log_violation(company_matches)
                     print(f"[Vantix] MASKED (company rule): {company_matches}")

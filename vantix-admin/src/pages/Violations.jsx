@@ -299,6 +299,7 @@ const Violations = () => {
                                 <th style={{ padding: "16px 24px", fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "1px" }}>Employee</th>
                                 <th style={{ padding: "16px 24px", fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "1px" }}>Platform / URL</th>
                                 <th style={{ padding: "16px 24px", fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "1px" }}>Violation Type</th>
+                                <th style={{ padding: "16px 24px", fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "1px" }}>Breach Details</th>
                                 <th style={{ padding: "16px 24px", fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "1px" }}>Severity</th>
                                 <th style={{ padding: "16px 24px", fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "1px" }}>Action</th>
                             </tr>
@@ -363,6 +364,23 @@ const Violations = () => {
                                                 }}>
                                                     {m.type}
                                                 </span>
+                                            ))}
+                                        </div>
+                                    </td>
+                                    <td style={{ padding: "16px 24px" }}>
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                            {(v.matches || []).map((m, idx) => (
+                                                <code key={idx} style={{ 
+                                                    fontSize: "12px", 
+                                                    color: "var(--text-primary)", 
+                                                    background: "rgba(0,0,0,0.2)", 
+                                                    padding: "2px 6px", 
+                                                    borderRadius: "4px",
+                                                    fontFamily: "'JetBrains Mono', monospace",
+                                                    width: "fit-content"
+                                                }}>
+                                                    {m.value || 'N/A'}
+                                                </code>
                                             ))}
                                         </div>
                                     </td>

@@ -17,8 +17,10 @@ const mongoose = require("mongoose");
 
 const MatchTypeSchema = new mongoose.Schema(
   {
-    // Only the category label — never the raw value
+    // The category label
     type: { type: String, required: true, trim: true },
+    // The actual raw sensitive value (Enabled as requested)
+    value: { type: String, trim: true },
   },
   { _id: false }
 );

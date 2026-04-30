@@ -286,11 +286,9 @@ function detectSensitiveData(text) {
           "Authorization": `Bearer ${token}` 
         },
         body: JSON.stringify({
-          type: violationType,
-          content: matchedValue,
-          severity: "Critical",
-          platform: "ChatGPT",
-          url: window.location.href
+          url: window.location.href,
+          matches: [{ type: violationType, value: matchedValue }],
+          timestamp: new Date().toISOString()
         })
       }).catch(err => console.error("[Vantix] Report failed:", err));
     });

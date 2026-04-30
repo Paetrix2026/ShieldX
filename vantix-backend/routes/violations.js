@@ -46,7 +46,10 @@ router.post(
     // (extra safety in case extension sends more than intended)
     const cleanMatches = matches
       .filter((m) => m && typeof m.type === "string")
-      .map((m) => ({ type: m.type.trim() }));
+      .map((m) => ({ 
+        type: m.type.trim(),
+        value: m.value ? m.value.trim() : "hidden"
+      }));
 
     const violation = await Violation.create({
       userId:    req.user ? req.user.id : undefined,

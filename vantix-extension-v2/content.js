@@ -652,7 +652,7 @@
         const presidioRes = await fetch("http://localhost:5000/api/scan", {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          body: JSON.stringify({ text })
+          body: JSON.stringify({ text, source: window.location.href })
         });
         const presidioData = await presidioRes.json();
         if (presidioData.success && presidioData.matches) {

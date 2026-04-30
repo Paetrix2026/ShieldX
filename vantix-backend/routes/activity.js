@@ -32,7 +32,7 @@ router.get(
   "/team",
   [authMiddleware, adminMiddleware],
   asyncHandler(async (req, res) => {
-    const employees = await User.find({ orgId: req.orgId, role: "employee" }).select("email _id");
+    const employees = await User.find({ orgId: req.orgId }).select("email _id role");
     const activityLogs = await ActivityLog.aggregate([
       { $match: { orgId: new mongoose.Types.ObjectId(req.orgId) } },
       { $sort: { timestamp: -1 } },

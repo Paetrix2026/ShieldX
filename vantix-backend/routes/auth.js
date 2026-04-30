@@ -349,4 +349,33 @@ router.post("/change-password", async (req, res, next) => {
   }
 });
 
+// @route   GET /api/auth/profile
+// @desc    Get current user profile
+// @access  Private
+router.get("/profile", async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ success: false, error: "Not authorized" });
+    }
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "vantix_fallback_secret_key");
+
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ success: false, error: "User not found" });
+
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        orgId: user.role === 'admin' ? user._id : user.orgId
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

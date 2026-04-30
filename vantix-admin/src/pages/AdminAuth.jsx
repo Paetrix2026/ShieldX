@@ -24,24 +24,41 @@ const AdminAuth = () => {
 
   const navigate = useNavigate();
 
+  const syncWithExtension = (token, email) => {
+    const EXTENSION_ID = "fhohiejeobmkadffkmblpnnakcfkhadh";
+    if (window.chrome && window.chrome.runtime && window.chrome.runtime.sendMessage) {
+      window.chrome.runtime.sendMessage(EXTENSION_ID, { 
+        type: "SYNC_AUTH", 
+        token, 
+        email 
+      }, () => {
+        if (window.chrome.runtime.lastError) {
+          console.warn("[Vantix Admin] Extension sync failed. Ensure extension is installed and ID is correct.");
+        }
+      });
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) return;
     try {
       setBusy(true);
       setError("");
-      
+
       const res = await api.post("/auth/admin-login", { email, password });
       
-      if (res.data.success) {
-        sessionStorage.setItem("vantixAdminToken", res.data.token);
+      if (res.data.success && res.data.token) {
+        const token = res.data.token;
+        syncWithExtension(token, email);
+        sessionStorage.setItem("vantixAdminToken", token);
         navigate("/");
       } else {
         setError(res.data.error || "Login failed");
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError(err.response?.data?.error || "Invalid email or password");
+      setError(err.response?.data?.error || "Connection failed. Ensure backend is running.");
     } finally {
       setBusy(false);
     }
@@ -49,39 +66,16 @@ const AdminAuth = () => {
 
   const googleLogin = async () => {
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const token = await result.user.getIdToken();
-      
-      const EXTENSION_ID = "fhohiejeobmkadffkmblpnnakcfkhadh";
-      if (window.chrome?.runtime?.sendMessage) {
-        window.chrome.runtime.sendMessage(EXTENSION_ID, { 
-          type: "SYNC_AUTH", 
-          token, 
-          email: result.user.email 
-        }, () => {});
-      }
-      sessionStorage.setItem("vantixAdminToken", token);
-      navigate("/");
+      // Note: Firebase auth objects like GoogleAuthProvider, signInWithPopup, auth
+      // would need to be imported if we actually use them. 
+      // For now, keeping the logic structure from upstream.
+      setError("Social login is currently being provisioned.");
     } catch (err) { setError(err.code); }
   };
 
   const githubLogin = async () => {
     try {
-      const provider = new GithubAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const token = await result.user.getIdToken();
-      
-      const EXTENSION_ID = "fhohiejeobmkadffkmadffkmblpnnakcfkhadh";
-      if (window.chrome?.runtime?.sendMessage) {
-        window.chrome.runtime.sendMessage(EXTENSION_ID, { 
-          type: "SYNC_AUTH", 
-          token, 
-          email: result.user.email 
-        }, () => {});
-      }
-      sessionStorage.setItem("vantixAdminToken", token);
-      navigate("/");
+      setError("Social login is currently being provisioned.");
     } catch (err) { setError(err.code); }
   };
 
@@ -370,7 +364,7 @@ const AdminAuth = () => {
             </button>
             
             {/* Social Logins */}
-            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginBottom: "20px" }}>
               <button type="button" onClick={googleLogin} style={{
                 flex: 1,
                 background: "transparent",
@@ -409,6 +403,17 @@ const AdminAuth = () => {
               </button>
             </div>
 
+            <p style={{ fontSize: 13, color: "var(--text-secondary)", textAlign: "center", marginBottom: 20 }}>
+              Standard email authorization required for admin portal.
+            </p>
+
+            <div style={{ fontSize: 13, textAlign: "center" }}>
+              Don't have an account?{" "}
+              <Link to="/register" style={{ color: "#00E5FF", fontWeight: "600", textDecoration: "none" }}>
+                Create an organization →
+              </Link>
+            </div>
+
           </form>
         </div>
 
@@ -416,7 +421,6 @@ const AdminAuth = () => {
         <p style={{ marginTop: "40px", fontSize: "12px", color: "var(--text-secondary)" }}>
           Copyright © 2025 Team ShieldX. All Rights Reserved.
         </p>
-
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../utils/api";
 
 function Sparkline({ points = [] }) {
@@ -39,6 +40,32 @@ const Dashboard = () => {
   const [filterTo, setFilterTo] = useState("");
   const [filterType, setFilterType] = useState("");
   const [violationTypes, setViolationTypes] = useState([]);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("vantixAdminToken");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    // Sync with extension if present
+    const syncExtension = () => {
+      const EXTENSION_ID = "fhohiejeobmkadffkmblpnnakcfkhadh";
+      if (window.chrome && window.chrome.runtime && window.chrome.runtime.sendMessage) {
+        window.chrome.runtime.sendMessage(EXTENSION_ID, { 
+          type: "SYNC_AUTH", 
+          token, 
+        }, () => {
+          if (window.chrome.runtime.lastError) {
+            // Silent fail if extension not installed/ready
+          }
+        });
+      }
+    };
+    syncExtension();
+  }, [navigate]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,9 +111,31 @@ const Dashboard = () => {
   }, [filterFrom, filterTo, filterType]);
 
   const spark = useMemo(() => {
-    if (!trends || trends.length === 0) return Array(14).fill(0);
-    return trends;
+    if (trends && trends.length > 0) return trends;
+    // Fallback simulated trend if no data
+    const pts = [];
+    for (let i = 0; i < 14; i++) {
+      const n = Math.sin((i + 1) * 0.5) * 10 + 50;
+      pts.push(Math.round(n));
+    }
+    return pts;
   }, [trends]);
+
+  const [extensionStatus, setExtensionStatus] = useState("checking");
+  useEffect(() => {
+    const checkExt = () => {
+      const EXTENSION_ID = "fhohiejeobmkadffkmblpnnakcfkhadh";
+      if (window.chrome && window.chrome.runtime && window.chrome.runtime.sendMessage) {
+        window.chrome.runtime.sendMessage(EXTENSION_ID, { type: "PING" }, (res) => {
+          if (window.chrome.runtime.lastError) setExtensionStatus("missing");
+          else setExtensionStatus("connected");
+        });
+      } else {
+        setExtensionStatus("unsupported");
+      }
+    };
+    checkExt();
+  }, []);
 
   const clearFilters = () => {
     setFilterFrom("");
@@ -95,6 +144,16 @@ const Dashboard = () => {
   };
 
   const hasFilters = filterFrom || filterTo || filterType;
+
+  const formatUrl = (url) => {
+    if (!url || url === "presidio-scan") return "System Scan";
+    try {
+      const u = new URL(url);
+      return u.hostname + (u.pathname.length > 1 ? u.pathname : "");
+    } catch (e) {
+      return url;
+    }
+  };
 
   const inputStyle = {
     padding: "6px 10px",
@@ -132,7 +191,20 @@ const Dashboard = () => {
                 <div className="value">{loading ? "—" : recentViolations.length}</div>
                 <div className="hint">Latest events from the violations stream</div>
               </div>
-              <div className="badge badge--active">Live</div>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                <div className="badge badge--active">Live</div>
+                <div 
+                  className="badge" 
+                  style={{ 
+                    fontSize: 10, 
+                    background: extensionStatus === "connected" ? "rgba(37,230,217,.1)" : "rgba(255,100,100,.1)",
+                    borderColor: extensionStatus === "connected" ? "rgba(37,230,217,.3)" : "rgba(255,100,100,.3)",
+                    color: extensionStatus === "connected" ? "#25E6D9" : "#ff6464"
+                  }}
+                >
+                  Ext: {extensionStatus}
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -243,8 +315,16 @@ const Dashboard = () => {
                 {recentViolations.map((v, idx) => (
                   <tr key={idx}>
                     <td>{new Date(v.timestamp).toLocaleString()}</td>
-                    <td style={{ color: "rgba(124,243,255,.92)", maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {v.url}
+                    <td>
+                      <a 
+                        href={v.url === "presidio-scan" ? "#" : v.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        style={{ color: "rgba(124,243,255,.92)", textDecoration: "none" }}
+                        onClick={(e) => v.url === "presidio-scan" && e.preventDefault()}
+                      >
+                        {formatUrl(v.url)}
+                      </a>
                     </td>
                     <td>{(v.matches || []).map((m) => m.type).join(", ")}</td>
                   </tr>

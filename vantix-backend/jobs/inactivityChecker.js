@@ -73,7 +73,7 @@ const startJob = () => {
   // Run every 24 hours
   setInterval(checkInactivity, 24 * 60 * 60 * 1000);
   // Run once on startup
-  checkInactivity();
+  // checkInactivity();
 };
 
 module.exports = startJob;

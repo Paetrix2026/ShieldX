@@ -26,10 +26,6 @@ connectDB();
 // ── Start Jobs ───────────────────────────────────────────────────────────────
 require("./jobs/inactivityChecker")();
 
-// ── Integrity Check ──────────────────────────────────────────────────────────
-const verifyProjectIntegrity = require("./utils/integrityGuard");
-verifyProjectIntegrity();
-
 // ── Create Express app ────────────────────────────────────────────────────────
 const app = express();
 

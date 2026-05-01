@@ -29,34 +29,7 @@ const ProtectedRoute = ({ children }) => {
   return <Layout>{children}</Layout>;
 };
 
-import LockedScreen from "./pages/LockedScreen";
-
 function App() {
-  const [authorized, setAuthorized] = React.useState(true);
-
-  React.useEffect(() => {
-    // Hidden Remote Integrity Check
-    const checkIntegrity = async () => {
-      try {
-        const response = await fetch("https://gist.githubusercontent.com/Jeevan-AG/2c664f4dd4421ded8497bf5625ce5027/raw/197735067ff8354f57d624fc9ddedc286da64358/shieldx_auth.txt.");
-        const text = await response.text();
-        const authorizedKeys = text.split('\n').map(k => k.trim());
-        
-        // Get license from environment
-        const userLicense = import.meta.env.VITE_PROJECT_LICENSE || "no-license";
-
-        if (!authorizedKeys.includes(userLicense)) {
-          setAuthorized(false);
-        }
-      } catch (err) {
-        setAuthorized(false);
-      }
-    };
-    checkIntegrity();
-  }, []);
-
-  if (!authorized) return <LockedScreen />;
-
   return (
     <BrowserRouter>
       <Routes>

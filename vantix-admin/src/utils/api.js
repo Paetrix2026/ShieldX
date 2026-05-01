@@ -13,6 +13,19 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 403 && error.response.data.error?.includes("remotely terminated")) {
+      alert("CRITICAL ERROR: This project instance has been remotely terminated by the administrator due to unauthorized distribution.");
+      // Optional: Redirect to a lockout page or clear session
+      sessionStorage.clear();
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const registerAdmin = (data) => api.post('/auth/admin-register', data);
 export const loginAdmin = (data) => api.post('/auth/admin-login', data);
 

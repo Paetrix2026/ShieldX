@@ -378,4 +378,60 @@ router.get("/profile", async (req, res, next) => {
   }
 });
 
+// @route   POST /api/auth/toggle-project-status
+// @desc    Toggle project active status (Remote Kill Switch)
+// @access  Private/Admin
+router.post("/toggle-project-status", async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ success: false, error: "Not authorized" });
+    }
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "vantix_fallback_secret_key");
+
+    if (decoded.role !== "admin") {
+      return res.status(403).json({ success: false, error: "Admin only" });
+    }
+
+    const company = await Company.findOne({ adminId: decoded.orgId });
+    if (!company) return res.status(404).json({ success: false, error: "Company not found" });
+
+    company.isActive = !company.isActive;
+    await company.save();
+
+    res.json({
+      success: true,
+      message: `Project ${company.isActive ? 'activated' : 'terminated'}`,
+      isActive: company.isActive
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// @route   GET /api/auth/project-status
+// @desc    Get current project status
+// @access  Private/Admin
+router.get("/project-status", async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ success: false, error: "Not authorized" });
+    }
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "vantix_fallback_secret_key");
+
+    const company = await Company.findOne({ adminId: decoded.orgId });
+    if (!company) return res.status(404).json({ success: false, error: "Company not found" });
+
+    res.json({
+      success: true,
+      isActive: company.isActive
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

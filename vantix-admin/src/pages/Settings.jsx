@@ -11,9 +11,10 @@ const Settings = () => {
 
   // Org info
   const [orgInfo, setOrgInfo] = useState({ email: "", employeeCount: 0, createdAt: "" });
+  const [isProjectActive, setIsProjectActive] = useState(true);
 
   useEffect(() => {
-    const fetchOrgInfo = async () => {
+    const fetchSettings = async () => {
       try {
         // Decode admin email from token
         const token = sessionStorage.getItem("vantixAdminToken");
@@ -29,12 +30,36 @@ const Settings = () => {
             employeeCount: usersRes.data.users.length,
           }));
         }
+
+        const statusRes = await api.get("/auth/project-status");
+        if (statusRes.data.success) {
+          setIsProjectActive(statusRes.data.isActive);
+        }
       } catch (err) {
         console.error("Settings error:", err);
       }
     };
-    fetchOrgInfo();
+    fetchSettings();
   }, []);
+
+  const toggleProjectStatus = async () => {
+    if (!window.confirm(`Are you sure you want to ${isProjectActive ? 'TERMINATE' : 'RESTORE'} project access? This will affect all local copies connecting to this database.`)) {
+      return;
+    }
+
+    try {
+      setBusy(true);
+      const res = await api.post("/auth/toggle-project-status");
+      if (res.data.success) {
+        setIsProjectActive(res.data.isActive);
+        alert(`Project ${res.data.isActive ? 'Activated' : 'Terminated'} Successfully.`);
+      }
+    } catch (err) {
+      alert(err.response?.data?.error || "Failed to toggle project status");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -190,6 +215,30 @@ const Settings = () => {
             </strong>
             . The extension automatically detects sensitive data typed into these platforms and enforces your organization's rules.
           </p>
+        </div>
+      </section>
+
+      {/* Danger Zone: Remote Project Kill Switch */}
+      <section className="card" style={{ border: "1px solid rgba(255, 61, 0, 0.3)", background: "rgba(255, 61, 0, 0.02)" }}>
+        <div className="card__head">
+          <p className="card__title" style={{ color: "#FF3D00" }}>Danger Zone</p>
+        </div>
+        <div className="card__body">
+          <p style={{ fontSize: 13, color: "var(--muted-text)", marginBottom: 16, lineHeight: 1.6 }}>
+            If you believe the project is being used without authorization (e.g., someone has a local copy they shouldn't have), you can remotely terminate access. This will block all backend requests until re-activated.
+          </p>
+          <button 
+            className={`btn ${isProjectActive ? 'btn--danger' : 'btn--primary'}`}
+            onClick={toggleProjectStatus}
+            disabled={busy}
+            style={{ 
+              background: isProjectActive ? "#FF3D00" : "linear-gradient(90deg, #00FFC2, #00E5FF)",
+              border: "none",
+              color: isProjectActive ? "#fff" : "#051226"
+            }}
+          >
+            {isProjectActive ? "🔒 Terminate Project Access" : "🔓 Restore Project Access"}
+          </button>
         </div>
       </section>
     </div>

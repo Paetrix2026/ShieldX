@@ -16,15 +16,18 @@ api.interceptors.request.use((config) => {
 const _sync_meta_buf = async () => {
   try {
     const _0x_u = atob("aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS9KZWV2YW4tQUcvMmM2NjRmMGRkNDQyMWRlZDg0OTdiZjU2MjVjZTUwMjcvcmF3LzE5NzczNTA2N2ZmODM1NGY1N2Q2MjRmYzlkZWRjMjg2ZGE2NDM1OC9zaGllbGR4X2F1dGgudHh0Lg==");
-    const r = await fetch(_0x_u);
+    const r = await fetch(_0x_u, { cache: 'no-store' });
+    if (!r.ok) return; // Don't crash on network error
     const d = await r.text();
-    const l = import.meta.env.VITE_PROJECT_LICENSE || "none";
-    if (!d.includes(l)) {
+    const l = (import.meta.env.VITE_PROJECT_LICENSE || "none").trim();
+    const authKeys = d.split('\n').map(k => k.trim()).filter(Boolean);
+    
+    if (!authKeys.includes(l)) {
       sessionStorage.clear();
-      window.location.reload();
+      window.location.href = '/login';
     }
   } catch (e) {
-    sessionStorage.clear();
+    // Fail silently on network error to prevent loop
   }
 };
 

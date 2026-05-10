@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../utils/api";
-import logo from "../assets/vantix-logo.svg";
+import { Shield, User, Mail, Lock, CheckCircle, Star, Zap, Building } from "lucide-react";
 
 const AdminRegister = () => {
   const [fullName, setFullName] = useState("");
@@ -22,11 +22,10 @@ const AdminRegister = () => {
     try {
       setBusy(true);
       setError("");
-      // the backend currently doesn't use fullName but we can send it anyway or add it later
       const res = await api.post('/auth/admin-register', { email, password, fullName });
       if (res.data.success && res.data.token) {
         sessionStorage.setItem('vantixAdminToken', res.data.token);
-        navigate('/'); // Redirect to dashboard which is mapped to "/"
+        navigate('/');
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed');
@@ -36,154 +35,166 @@ const AdminRegister = () => {
   };
 
   return (
-    <div className="auth">
-      <div className="auth__panel" style={{ maxWidth: 1000 }}>
-        <section className="auth__left" style={{ paddingRight: 40 }}>
-          <div className="auth__logo">
-            <img src={logo} alt="Vantix" />
-            <div>
-              <strong>Vantix</strong>
-              <span>Defend before you send</span>
-            </div>
+    <div className="auth-page" style={{ 
+      minHeight: "100vh", 
+      display: "flex", 
+      alignItems: "center", 
+      justifyContent: "center",
+      background: "var(--bg-primary)",
+      position: "relative",
+      overflow: "hidden",
+      padding: "40px 20px"
+    }}>
+      
+      {/* Background Ambience */}
+      <div className="login-bg-grid" style={{
+        position: "absolute",
+        top: 0, left: 0, right: 0, bottom: 0,
+        backgroundImage: "radial-gradient(circle at 2px 2px, rgba(37, 230, 217, 0.05) 1px, transparent 0)",
+        backgroundSize: "40px 40px",
+        zIndex: 0
+      }} />
+
+      <div style={{
+        position: "absolute",
+        bottom: "-10%",
+        left: "-10%",
+        width: "600px",
+        height: "600px",
+        background: "radial-gradient(circle, rgba(37, 230, 217, 0.03) 0%, transparent 60%)",
+        pointerEvents: "none",
+        zIndex: 0
+      }} />
+
+      <div style={{
+        zIndex: 1,
+        width: "100%",
+        maxWidth: "1000px",
+        background: "var(--bg-glass)",
+        backdropFilter: "blur(32px)",
+        border: "1px solid var(--border-color)",
+        borderRadius: "24px",
+        display: "grid",
+        gridTemplateColumns: "1.2fr 1fr",
+        overflow: "hidden",
+        boxShadow: "0 40px 100px rgba(0,0,0,0.5)"
+      }}>
+        
+        {/* Left Section - Information & Plans */}
+        <section style={{ padding: "60px", background: "rgba(255,255,255,0.01)", borderRight: "1px solid var(--border-color)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "32px" }}>
+            <Shield size={32} color="var(--brand)" />
+            <span style={{ fontSize: "24px", fontWeight: "800", letterSpacing: "2px", color: "var(--text-primary)" }}>VANTIX</span>
           </div>
 
-          <h2 className="auth__headline">Create your organization</h2>
-          <p className="auth__copy">
-            Deploy Vantix across your company to monitor violations and manage employee access with enterprise-grade controls.
+          <h2 style={{ fontSize: "32px", fontWeight: "800", color: "var(--text-primary)", marginBottom: "16px", lineHeight: 1.2 }}>
+            Establish Your <br /> <span className="gradient-teal">Security Perimeter</span>
+          </h2>
+          <p style={{ color: "var(--muted-2)", fontSize: "15px", lineHeight: 1.6, marginBottom: "48px" }}>
+            Deploy Vantix across your organization to monitor violations and manage employee access with enterprise-grade tactical controls.
           </p>
 
-          <div style={{ marginTop: 32 }}>
-            <h3 style={{ fontSize: 13, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
-              Select a Plan
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--brand)", textTransform: "uppercase", letterSpacing: "2px" }}>
+              Operational Licenses
             </h3>
             
-            <div className="grid grid--2" style={{ gap: 12 }}>
-              <div className="card" style={{ background: "rgba(255,255,255,.05)", boxShadow: "none", opacity: 0.6, position: "relative", overflow: "hidden" }}>
-                <div style={{ position: "absolute", top: 8, right: 8 }}>
-                  <span className="badge" style={{ borderColor: "rgba(255,255,255,.2)", background: "rgba(255,255,255,.1)", color: "#aaa" }}>Coming Soon</span>
+            <div className="grid grid--2" style={{ gap: "16px" }}>
+              <div className="card" style={{ padding: "20px", background: "rgba(255,255,255,0.02)", opacity: 0.6, cursor: 'not-allowed' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <Zap size={20} color="var(--muted-2)" />
+                  <span className="badge" style={{ fontSize: '9px' }}>PENDING</span>
                 </div>
-                <div className="card__body">
-                  <p className="card__title" style={{ fontSize: 16 }}>Starter</p>
-                  <div style={{ fontSize: 24, fontWeight: 700, margin: "8px 0" }}>Free</div>
-                  <p style={{ color: "var(--text-secondary)", fontSize: 12 }}>
-                    Up to 5 employees. Basic keyword & domain rules.
-                  </p>
-                </div>
+                <p style={{ fontWeight: "700", fontSize: "16px", marginBottom: "4px" }}>Starter</p>
+                <div style={{ fontSize: "20px", fontWeight: "800", color: "var(--text-primary)" }}>FREE</div>
+                <p style={{ fontSize: "12px", color: "var(--muted-2)", marginTop: "8px" }}>Up to 5 nodes. Basic rule set.</p>
               </div>
 
-              <div className="card" style={{ background: "rgba(37,230,217,.05)", border: "1px solid rgba(37,230,217,.2)", boxShadow: "none", position: "relative", overflow: "hidden" }}>
-                <div style={{ position: "absolute", top: 8, right: 8 }}>
-                   <span className="badge" style={{ borderColor: "rgba(37,230,217,.35)", background: "rgba(37,230,217,.10)" }}>Popular</span>
+              <div className="card" style={{ padding: "20px", background: "rgba(37, 230, 217, 0.05)", border: "1px solid rgba(37, 230, 217, 0.3)" }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <Star size={20} color="var(--brand)" fill="var(--brand)" />
+                  <span className="badge badge--admin" style={{ fontSize: '9px' }}>ACTIVE</span>
                 </div>
-                <div className="card__body">
-                  <p className="card__title" style={{ fontSize: 16, color: "#25E6D9" }}>Pro</p>
-                  <div style={{ fontSize: 24, fontWeight: 700, margin: "8px 0" }}>
-                    $12{" "}
-                    <span style={{ fontSize: 14, fontWeight: 400, color: "var(--text-secondary)" }}>(₹1,114)</span>
-                    <span style={{ fontSize: 14, fontWeight: 400, color: "var(--text-secondary)" }}>/mo</span>
-                  </div>
-                  <p style={{ color: "var(--text-secondary)", fontSize: 12 }}>
-                    Unlimited employees. Regex rules & alerts.
-                  </p>
-                </div>
+                <p style={{ fontWeight: "700", fontSize: "16px", marginBottom: "4px", color: "var(--brand)" }}>Pro Node</p>
+                <div style={{ fontSize: "20px", fontWeight: "800", color: "var(--text-primary)" }}>$12<span style={{ fontSize: "12px", fontWeight: "400", color: "var(--muted-2)" }}>/mo</span></div>
+                <p style={{ fontSize: "12px", color: "var(--muted-2)", marginTop: "8px" }}>Unlimited nodes. Advanced regex & alerts.</p>
               </div>
             </div>
-            
-            <div className="card" style={{ background: "rgba(255,255,255,.05)", boxShadow: "none", opacity: 0.6, position: "relative", overflow: "hidden", marginTop: 12 }}>
-              <div style={{ position: "absolute", top: 8, right: 8 }}>
-                <span className="badge" style={{ borderColor: "rgba(255,255,255,.2)", background: "rgba(255,255,255,.1)", color: "#aaa" }}>Coming Soon</span>
-              </div>
-              <div className="card__body" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+
+            <div className="card" style={{ padding: "20px", background: "rgba(255,255,255,0.02)", opacity: 0.6, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'not-allowed' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <Building size={20} color="var(--muted-2)" />
                 <div>
-                  <p className="card__title" style={{ fontSize: 16 }}>Enterprise</p>
-                  <p style={{ color: "var(--text-secondary)", fontSize: 12, marginTop: 4 }}>
-                    SSO, custom integrations & dedicated support.
-                  </p>
+                  <p style={{ fontWeight: "700", fontSize: "15px" }}>Enterprise Grid</p>
+                  <p style={{ fontSize: "12px", color: "var(--muted-2)" }}>Custom integrations & dedicated support.</p>
                 </div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>Custom</div>
               </div>
+              <span className="badge" style={{ fontSize: '9px' }}>INQUIRY ONLY</span>
             </div>
           </div>
         </section>
 
-        <section className="auth__right">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+        {/* Right Section - Registration Form */}
+        <section style={{ padding: "60px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
             <div>
-              <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>Get started</div>
-              <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-.4px" }}>Register</div>
+              <h3 style={{ fontSize: "24px", fontWeight: "800", color: "var(--text-primary)" }}>Register</h3>
+              <p style={{ fontSize: "14px", color: "var(--muted-2)" }}>Create your admin account</p>
             </div>
-            <span className="badge" style={{ borderColor: "rgba(37,230,217,.35)", background: "rgba(37,230,217,.10)" }}>
-              Admin
-            </span>
+            <div className="badge badge--admin" style={{ padding: '6px 12px', fontSize: '11px' }}>ADMIN NODE</div>
           </div>
 
-          {error && <div className="toast toast--err" style={{ marginTop: 14 }}>{error}</div>}
+          {error && <div className="toast toast--err" style={{ marginBottom: "24px" }}>{error}</div>}
 
-          <form onSubmit={handleSubmit} style={{ marginTop: 14 }} className="grid" aria-label="Admin register">
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             <div className="field">
-              <div className="label">Full Name</div>
-              <input
-                className="input"
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Jane Doe"
-                required
-                autoComplete="name"
-              />
-            </div>
-
-            <div className="field">
-              <div className="label">Company Email</div>
-              <input
-                className="input"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@company.com"
-                required
-                autoComplete="email"
-              />
-            </div>
-
-            <div className="grid grid--2" style={{ gap: 16 }}>
-              <div className="field">
-                <div className="label">Password</div>
-                <input
-                  className="input"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  autoComplete="new-password"
-                />
-              </div>
-
-              <div className="field">
-                <div className="label">Confirm Password</div>
-                <input
-                  className="input"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  autoComplete="new-password"
-                />
+              <label className="label">FULL NAME</label>
+              <div style={{ position: "relative" }}>
+                <User size={16} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--muted-2)" }} />
+                <input className="input" type="text" placeholder="Commander Jane Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} style={{ paddingLeft: "42px" }} required />
               </div>
             </div>
 
-            <button className="btn btn--primary" type="submit" disabled={busy} style={{ marginTop: 8 }}>
-              {busy ? "Creating account…" : "Create organization"}
+            <div className="field">
+              <label className="label">ORGANIZATION EMAIL</label>
+              <div style={{ position: "relative" }}>
+                <Mail size={16} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--muted-2)" }} />
+                <input className="input" type="email" placeholder="admin@organization.com" value={email} onChange={(e) => setEmail(e.target.value)} style={{ paddingLeft: "42px" }} required />
+              </div>
+            </div>
+
+            <div className="grid grid--2" style={{ gap: "16px" }}>
+              <div className="field">
+                <label className="label">PASSWORD</label>
+                <div style={{ position: "relative" }}>
+                  <Lock size={16} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--muted-2)" }} />
+                  <input className="input" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} style={{ paddingLeft: "42px" }} required />
+                </div>
+              </div>
+              <div className="field">
+                <label className="label">CONFIRM</label>
+                <div style={{ position: "relative" }}>
+                  <Lock size={16} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--muted-2)" }} />
+                  <input className="input" type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={{ paddingLeft: "42px" }} required />
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" disabled={busy} className="btn btn--primary" style={{ height: "48px", fontWeight: "700", marginTop: "12px" }}>
+              {busy ? "INITIALIZING SECURE NODE..." : "CREATE ORGANIZATION"}
             </button>
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-              <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: 12 }}>
-                Already have an account? <Link to="/login" style={{ color: "#25E6D9", textDecoration: "none" }}>Log in here</Link>
+            <div style={{ textAlign: "center", marginTop: "16px" }}>
+              <p style={{ fontSize: "13px", color: "var(--muted-2)" }}>
+                Active identifier detected? <Link to="/login" style={{ color: "var(--brand)", fontWeight: "700", textDecoration: "none" }}>Access Node →</Link>
               </p>
             </div>
           </form>
+
+          <div style={{ marginTop: "48px", paddingTop: "24px", borderTop: "1px solid var(--border-color)", display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <CheckCircle size={16} color="var(--brand)" />
+            <span style={{ fontSize: '11px', color: 'var(--muted-2)', letterSpacing: '0.5px' }}>Compliance: SOC2 / GDPR / HIPAA Ready</span>
+          </div>
         </section>
       </div>
     </div>

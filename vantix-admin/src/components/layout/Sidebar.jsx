@@ -15,14 +15,13 @@ function IconReport(props) {
   );
 }
 
-function NavItem({ to, icon, label }) {
-  const { pathname } = useLocation();
-  const active = pathname === to;
+function IconViolation(props) {
   return (
-    <Link to={to} data-active={active ? "true" : "false"}>
-      {icon}
-      <span>{label}</span>
-    </Link>
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
   );
 }
 
@@ -32,6 +31,17 @@ function IconSettings(props) {
       <circle cx="12" cy="12" r="3"/>
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
     </svg>
+  );
+}
+
+function NavItem({ to, icon, label }) {
+  const { pathname } = useLocation();
+  const active = pathname === to;
+  return (
+    <Link to={to} data-active={active ? "true" : "false"}>
+      {icon}
+      <span>{label}</span>
+    </Link>
   );
 }
 
@@ -50,16 +60,22 @@ export default function Sidebar({ onLogout }) {
         <NavItem to="/" label="Overview" icon={<IconGrid />} />
         <NavItem to="/employees" label="Employees" icon={<IconUsers />} />
         <NavItem to="/rules" label="Rules" icon={<IconShield />} />
-        <NavItem to="/violations" label="Violations" icon={
-          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-        } />
+        <NavItem to="/violations" label="Violations" icon={<IconViolation />} />
         <NavItem to="/reports" label="Reports" icon={<IconReport />} />
         <NavItem to="/settings" label="Settings" icon={<IconSettings />} />
       </nav>
 
+      <div className="sidebar__footer">
+        <button
+          className="btn btn--ghost"
+          onClick={onLogout}
+          type="button"
+          style={{ width: '100%', justifyContent: 'flex-start', gap: 10, fontSize: 13, color: 'var(--text-secondary)' }}
+        >
+          <IconLogout style={{ width: 16, height: 16 }} />
+          Sign out
+        </button>
+      </div>
     </aside>
   );
 }
-

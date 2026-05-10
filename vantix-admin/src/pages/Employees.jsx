@@ -4,7 +4,7 @@ import api from "../utils/api";
 const Employees = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [confirmDelete, setConfirmDelete] = useState(null); // user obj to delete
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newEmployeeEmail, setNewEmployeeEmail] = useState('');
   const [success, setSuccess] = useState('');
@@ -24,7 +24,6 @@ const Employees = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
-
 
   const handleDeleteUser = async (userId) => {
     setError('');
@@ -88,20 +87,52 @@ const Employees = () => {
     }
   };
 
+  const onlineCount = users.filter(u => u.isOnline).length;
+
   return (
-    <div className="grid" style={{ gap: 14 }}>
+    <div className="grid" style={{ gap: 16 }}>
+      {/* Quick Stats */}
+      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
+        <div className="card">
+          <div className="card__body metric" style={{ padding: '16px 20px' }}>
+            <div>
+              <div className="value gradient-teal" style={{ fontSize: 36 }}>{users.length}</div>
+              <div className="hint">Total Employees</div>
+            </div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card__body metric" style={{ padding: '16px 20px' }}>
+            <div>
+              <div className="value gradient-green" style={{ fontSize: 36 }}>{onlineCount}</div>
+              <div className="hint">Currently Online</div>
+            </div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card__body metric" style={{ padding: '16px 20px' }}>
+            <div>
+              <div className="value gradient-blue" style={{ fontSize: 36 }}>{users.filter(u => u.role === 'admin').length}</div>
+              <div className="hint">Admins</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Table */}
       <section className="card">
         <div className="card__head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <p className="card__title">Employee Directory</p>
-            {success && <div className="toast toast--success" style={{ marginTop: 12 }}>{success}</div>}
+            {success && <div className="toast toast--ok" style={{ marginTop: 12 }}>{success}</div>}
             {error && <div className="toast toast--err" style={{ marginTop: 12 }}>{error}</div>}
-            <div className="card__description" style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginTop: 4 }}>
+            <div style={{ color: "var(--text-secondary)", fontSize: 13, marginTop: 6 }}>
               Employees can be added manually here or auto-onboarded when they login via extension.
             </div>
           </div>
-          <button className="btn btn--primary" onClick={() => setShowAddModal(true)}>
-            + Add Employee
+          <button className="btn btn--primary" onClick={() => setShowAddModal(true)} style={{ borderRadius: 999 }}>
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg>
+            Add Employee
           </button>
         </div>
         <div className="card__body">
@@ -113,27 +144,27 @@ const Employees = () => {
                 <th>Status</th>
                 <th>Active Platform</th>
                 <th>Agent Access</th>
-                <th style={{ width: 120 }}>Actions</th>
+                <th style={{ width: 100 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {users.map((user) => (
                 <tr key={user._id}>
-                  <td>{user.email}</td>
+                  <td style={{ fontWeight: 500 }}>{user.email}</td>
                   <td>
                     <select
-                      className="select"
+                      className="input"
                       value={user.role}
                       onChange={(e) => handleRoleChange(user._id, e.target.value)}
                       style={{
-                        padding: "4px 8px",
+                        padding: "4px 10px",
                         fontSize: 12,
-                        background: "var(--input-inline-bg)",
-                        border: "1px solid var(--input-inline-border)",
+                        height: 30,
                         borderRadius: 6,
-                        color: user.role === "admin" ? "#25E6D9" : "var(--input-inline-color)",
                         cursor: "pointer",
                         minWidth: 90,
+                        color: user.role === "admin" ? "#25E6D9" : "var(--text-primary)",
+                        fontWeight: user.role === "admin" ? 600 : 400,
                       }}
                     >
                       <option value="employee">Employee</option>
@@ -144,36 +175,36 @@ const Employees = () => {
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <div style={{
                         width: 8, height: 8, borderRadius: "50%",
-                        background: user.isOnline ? "#00E676" : "#FF3D00",
-                        boxShadow: user.isOnline ? "0 0 8px #00E676" : "none"
+                        background: user.isOnline ? "#2EE59D" : "#FF4D6D",
+                        boxShadow: user.isOnline ? "0 0 8px rgba(46,229,157,0.5)" : "none",
                       }} />
-                      <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                      <span style={{ fontSize: 13, color: "var(--text-secondary)", fontWeight: 500 }}>
                         {user.isOnline ? "Online" : "Offline"}
                       </span>
                     </div>
                   </td>
                   <td>
                     {user.isOnline && user.currentApp ? (
-                      <span style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>{user.currentApp}</span>
+                      <span className="badge badge--admin" style={{ fontSize: 11, padding: '3px 10px' }}>{user.currentApp}</span>
                     ) : (
-                      <span style={{ fontSize: "0.85rem", color: "var(--muted-text)" }}>-</span>
+                      <span style={{ fontSize: 13, color: "var(--muted-text)" }}>—</span>
                     )}
                   </td>
                   <td>
                     <button
-                      className={`btn ${user.isAuthorized ? "btn--outline" : "btn--danger"}`}
+                      className={`btn ${user.isAuthorized ? "btn--ghost" : "btn--danger"}`}
                       type="button"
-                      style={{ fontSize: 11, padding: "4px 8px" }}
+                      style={{ fontSize: 11, padding: "4px 10px", height: 28, borderRadius: 6 }}
                       onClick={() => handleToggleAccess(user._id)}
                     >
-                      {user.isAuthorized ? "Revoke Access" : "Grant Access"}
+                      {user.isAuthorized ? "Revoke" : "Grant"}
                     </button>
                   </td>
                   <td>
                     <button
                       className="btn btn--danger"
                       type="button"
-                      style={{ fontSize: 12, padding: "4px 12px" }}
+                      style={{ fontSize: 11, padding: "4px 10px", height: 28, borderRadius: 6 }}
                       onClick={() => setConfirmDelete(user)}
                     >
                       Remove
@@ -183,14 +214,18 @@ const Employees = () => {
               ))}
               {!loading && users.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ color: "var(--empty-state-text)" }}>
-                    No users found
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '48px 0', color: "var(--empty-state-text)" }}>
+                    <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ opacity: 0.3, marginBottom: 8 }}>
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                    </svg>
+                    <br/><span style={{ fontSize: 13 }}>No users found</span>
                   </td>
                 </tr>
               )}
               {loading && (
                 <tr>
-                  <td colSpan={5} style={{ color: "var(--empty-state-text)" }}>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '48px 0', color: "var(--empty-state-text)" }}>
+                    <div style={{ width: 20, height: 20, border: '2px solid var(--border-color)', borderTopColor: '#25E6D9', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 8px' }} />
                     Loading…
                   </td>
                 </tr>
@@ -202,44 +237,21 @@ const Employees = () => {
 
       {/* Delete confirmation modal */}
       {confirmDelete && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.55)",
-            zIndex: 1000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          onClick={() => setConfirmDelete(null)}
-        >
-          <div
-            className="card"
-            style={{ maxWidth: 420, margin: "auto", animation: "fadeIn 0.15s ease" }}
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="modal-overlay" onClick={() => setConfirmDelete(null)}>
+          <div className="card modal-content" style={{ maxWidth: 440, width: '100%' }} onClick={(e) => e.stopPropagation()}>
             <div className="card__head">
-              <p className="card__title">Confirm removal</p>
+              <p className="card__title" style={{ color: '#FF4D6D' }}>Confirm Removal</p>
             </div>
             <div className="card__body">
-              <p style={{ color: "var(--muted-text)", marginBottom: 16, lineHeight: 1.5 }}>
+              <p style={{ color: "var(--muted-text)", marginBottom: 20, lineHeight: 1.6, fontSize: 14 }}>
                 Are you sure you want to remove <strong style={{ color: "var(--text-primary)" }}>{confirmDelete.email}</strong>?
                 This action cannot be undone. Their violation history will be preserved.
               </p>
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                <button
-                  className="btn"
-                  type="button"
-                  onClick={() => setConfirmDelete(null)}
-                >
+                <button className="btn btn--ghost" type="button" onClick={() => setConfirmDelete(null)}>
                   Cancel
                 </button>
-                <button
-                  className="btn btn--danger"
-                  type="button"
-                  onClick={() => handleDeleteUser(confirmDelete._id)}
-                >
+                <button className="btn btn--danger" type="button" onClick={() => handleDeleteUser(confirmDelete._id)}>
                   Remove user
                 </button>
               </div>
@@ -247,37 +259,41 @@ const Employees = () => {
           </div>
         </div>
       )}
+
       {/* Add Employee Modal */}
       {showAddModal && (
-        <div className="modal-overlay">
-          <div className="modal-content card" style={{ width: 400 }}>
-            <p className="card__title">Add New Employee</p>
-            <p className="card__description" style={{ marginBottom: 20 }}>
-              Enter the employee's email address. They will be prompted to set a password upon first login.
-            </p>
-            <form onSubmit={handleAddEmployee} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <input
-                type="email"
-                className="input"
-                placeholder="employee@yourcompany.com"
-                value={newEmployeeEmail}
-                onChange={(e) => setNewEmployeeEmail(e.target.value)}
-                required
-                autoFocus
-              />
-              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 10 }}>
-                <button type="button" className="btn btn--ghost" onClick={() => { setShowAddModal(false); setError(''); setNewEmployeeEmail(''); }}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn--primary">
-                  Invite Employee
-                </button>
-              </div>
-            </form>
+        <div className="modal-overlay" onClick={() => { setShowAddModal(false); setError(''); setNewEmployeeEmail(''); }}>
+          <div className="card modal-content" style={{ maxWidth: 440, width: '100%' }} onClick={(e) => e.stopPropagation()}>
+            <div className="card__head">
+              <p className="card__title">Add New Employee</p>
+            </div>
+            <div className="card__body">
+              <p style={{ color: "var(--muted-text)", marginBottom: 20, fontSize: 13, lineHeight: 1.5 }}>
+                Enter the employee's email address. They will be prompted to set a password upon first login.
+              </p>
+              <form onSubmit={handleAddEmployee} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <input
+                  type="email"
+                  className="input"
+                  placeholder="employee@yourcompany.com"
+                  value={newEmployeeEmail}
+                  onChange={(e) => setNewEmployeeEmail(e.target.value)}
+                  required
+                  autoFocus
+                />
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 6 }}>
+                  <button type="button" className="btn btn--ghost" onClick={() => { setShowAddModal(false); setError(''); setNewEmployeeEmail(''); }}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn--primary">
+                    Invite Employee
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
-
     </div>
   );
 };

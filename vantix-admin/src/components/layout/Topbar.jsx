@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { IconLogout } from "./icons";
 
 function routeMeta(pathname) {
   if (pathname === "/") {
@@ -21,10 +20,22 @@ function routeMeta(pathname) {
       subtitle: "Configure protected domains and sensitive keywords.",
     };
   }
+  if (pathname === "/violations") {
+    return {
+      title: "Violation Audit Log",
+      subtitle: "Detailed history of all blocked data leakage attempts.",
+    };
+  }
   if (pathname === "/reports") {
     return {
       title: "Reports",
       subtitle: "Generate and export weekly, monthly, or yearly activity reports.",
+    };
+  }
+  if (pathname === "/settings") {
+    return {
+      title: "Settings",
+      subtitle: "Manage organization, security, and preferences.",
     };
   }
   return { title: "Vantix Admin", subtitle: "Secure-by-default operations." };
@@ -40,11 +51,6 @@ export default function Topbar({ title, subtitle, onLogout }) {
     () => (localStorage.getItem("theme") || "light") === "dark"
   );
 
-  const handleThemeToggle = () => {
-    window.toggleTheme();
-    setIsDark(!isDark);
-  };
-
   return (
     <header className="topbar">
       <div className="topbar__row">
@@ -53,19 +59,39 @@ export default function Topbar({ title, subtitle, onLogout }) {
           <p>{finalSubtitle}</p>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div className="theme-toggle" style={{ marginRight: '25px' }} onClick={() => window.toggleTheme()}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          {/* Status indicator */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "6px 14px",
+            borderRadius: 999,
+            background: "var(--panel)",
+            border: "1px solid var(--border-color)",
+            fontSize: 12,
+            fontWeight: 600,
+            color: "var(--text-secondary)",
+          }}>
+            <div className="pulse-dot" />
+            <span>System Active</span>
+          </div>
+
+          {/* Theme toggle */}
+          <div
+            className="theme-toggle"
+            onClick={() => {
+              window.toggleTheme();
+              setIsDark(!isDark);
+            }}
+            title="Toggle theme"
+          >
             <div className="toggle-track">
               <div className="toggle-thumb"></div>
             </div>
           </div>
-          <button className="btn btn--ghost" onClick={onLogout} type="button">
-            <IconLogout style={{ marginRight: 8 }} />
-            Sign out
-          </button>
         </div>
       </div>
     </header>
   );
 }
-

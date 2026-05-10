@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import api from "../utils/api";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from "recharts";
+import { Download, ChevronDown, FileText, FileSpreadsheet, File as FileIcon, Calendar, Activity, Users, Shield } from "lucide-react";
 
 /* ── Shared report HTML builder for PDF/DOCX ─────────────────────────────── */
 function buildReportHTML(report, period) {
@@ -147,7 +148,6 @@ async function exportPDF(period) {
     URL.revokeObjectURL(url);
   } catch (err) {
     console.error("PDF download error", err);
-    // Fallback to browser print
     window.print();
   }
 }
@@ -187,7 +187,6 @@ function exportCSV(report, period) {
 function exportDOCX(report, period) {
   if (!report) return;
   const html = buildReportHTML(report, period);
-  // Word-compatible HTML with page setup
   const docContent = `
     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
     <head><meta charset="utf-8"><title>Vantix Report</title>
@@ -205,8 +204,6 @@ function downloadBlob(content, type, filename) {
   a.click();
   URL.revokeObjectURL(url);
 }
-
-/* ── Component ───────────────────────────────────────────────────────────── */
 
 const Reports = () => {
   const [period, setPeriod] = useState("monthly");
@@ -245,7 +242,6 @@ const Reports = () => {
     return () => clearInterval(interval);
   }, [period]);
 
-  // Close menu on outside click
   useEffect(() => {
     const handleClick = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -266,58 +262,42 @@ const Reports = () => {
   const COLORS = ["#25e6d9", "rgba(255,176,32,0.8)", "rgba(255,77,77,0.7)"];
 
   return (
-    <div className="grid" style={{ gap: 14 }}>
+    <div className="grid" style={{ gap: 16 }}>
       <style>
         {`
           @media print {
-            .sidebar, .topbar, .period-selector-section, .export-btn-section, .app-shell > .main > .content > .grid > .grid {
+            .sidebar, .topbar, .period-selector-section, .export-btn-section, .grid--2, .card {
               display: none !important;
             }
-            body {
-              background: #fff !important;
-              color: #000 !important;
-            }
-            .content {
-              padding: 0 !important;
-            }
-            .card {
-              border: 1px solid #ddd !important;
-              background: #fff !important;
-              box-shadow: none !important;
-              color: #000 !important;
-            }
-            .card__title, .metric .value, .metric .hint, .table th, .table td {
-              color: #000 !important;
-            }
-            .recharts-text {
-              fill: #000 !important;
-            }
-            .recharts-cartesian-grid-line {
-              stroke: #ddd !important;
-            }
-            #vantix-print-report {
-              display: block !important;
-            }
+            body { background: #fff !important; color: #000 !important; }
+            .content { padding: 0 !important; }
+            #vantix-print-report { display: block !important; }
           }
         `}
       </style>
 
-      {/* Hidden print-only professional report */}
+      {/* Hidden print report */}
       <div id="vantix-print-report" style={{ display: "none" }}>
         {report && <div dangerouslySetInnerHTML={{ __html: buildReportHTML(report, period) }} />}
       </div>
 
-      {/* SECTION 1 — Period selector + Export dropdown */}
+      {/* Control Bar */}
       <section className="card period-selector-section" style={{ overflow: "visible", position: "relative", zIndex: 50 }}>
         <div className="card__body" style={{ display: "flex", gap: 12, justifyContent: "space-between", alignItems: "center", overflow: "visible" }}>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, background: 'var(--panel)', padding: 4, borderRadius: 10, border: '1px solid var(--border-color)' }}>
             {["weekly", "monthly", "yearly"].map((p) => (
               <button
                 key={p}
                 className="btn"
                 style={{
                   textTransform: "capitalize",
-                  borderColor: period === p ? "rgba(37,230,217,0.8)" : "var(--border-color)",
+                  background: period === p ? "var(--bg-glass)" : "transparent",
+                  border: period === p ? "1px solid var(--border-color)" : "none",
+                  boxShadow: period === p ? "var(--shadow-sm)" : "none",
+                  height: 34,
+                  fontSize: 12,
+                  fontWeight: period === p ? 600 : 400,
+                  color: period === p ? "var(--brand)" : "var(--text-secondary)",
                 }}
                 onClick={() => setPeriod(p)}
               >
@@ -326,35 +306,35 @@ const Reports = () => {
             ))}
           </div>
 
-          {/* Export dropdown */}
           <div ref={menuRef} style={{ position: "relative" }}>
             <button
-              className="btn btn--ghost export-btn-section"
-              style={{ borderColor: "#25e6d9", display: "flex", alignItems: "center", gap: 6 }}
+              className="btn btn--primary export-btn-section"
+              style={{ borderRadius: 999, height: 42 }}
               onClick={() => setShowExportMenu(!showExportMenu)}
             >
-              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <Download size={16} />
               Download Report
-              <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 2 }}><polyline points="2 4 5 7 8 4"/></svg>
+              <ChevronDown size={14} style={{ marginLeft: 4, opacity: 0.7 }} />
             </button>
 
             {showExportMenu && (
               <div style={{
                 position: "absolute",
-                top: "calc(100% + 6px)",
+                top: "calc(100% + 8px)",
                 right: 0,
                 background: "var(--dropdown-bg)",
                 border: "1px solid var(--dropdown-border)",
-                borderRadius: 8,
-                padding: "4px 0",
+                borderRadius: 12,
+                padding: "6px",
                 zIndex: 9999,
-                minWidth: 210,
-                boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                minWidth: 220,
+                boxShadow: "var(--shadow)",
+                backdropFilter: 'blur(20px)',
               }}>
                 {[
-                  { key: "pdf",  label: "PDF Document",  icon: "\uD83D\uDCC4", desc: "Print-ready format" },
-                  { key: "docx", label: "Word Document",  icon: "\uD83D\uDCDD", desc: "Editable .doc file" },
-                  { key: "csv",  label: "Spreadsheet",     icon: "\uD83D\uDCCA", desc: "Raw data for Excel" },
+                  { key: "pdf",  label: "PDF Document",  icon: <FileText size={18} />, desc: "Print-ready format" },
+                  { key: "docx", label: "Word Document",  icon: <FileIcon size={18} />, desc: "Editable .doc file" },
+                  { key: "csv",  label: "Spreadsheet",     icon: <FileSpreadsheet size={18} />, desc: "Raw data for Excel" },
                 ].map((opt) => (
                   <button
                     key={opt.key}
@@ -362,24 +342,25 @@ const Reports = () => {
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 10,
+                      gap: 12,
                       width: "100%",
                       padding: "10px 14px",
                       background: "transparent",
                       border: "none",
-                      color: "var(--dropdown-item-color)",
+                      color: "var(--text-primary)",
                       cursor: "pointer",
                       fontSize: 13,
                       textAlign: "left",
-                      transition: "background 0.15s",
+                      borderRadius: 8,
+                      transition: "background 0.2s",
                     }}
                     onMouseEnter={(e) => e.currentTarget.style.background = "var(--dropdown-item-hover)"}
                     onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                   >
-                    <span style={{ fontSize: 16 }}>{opt.icon}</span>
+                    <div style={{ color: 'var(--brand)' }}>{opt.icon}</div>
                     <div>
-                      <div style={{ fontWeight: 500 }}>{opt.label}</div>
-                      <div style={{ fontSize: 11, color: "var(--dropdown-item-sub)", marginTop: 1 }}>{opt.desc}</div>
+                      <div style={{ fontWeight: 600 }}>{opt.label}</div>
+                      <div style={{ fontSize: 11, color: "var(--muted-2)", marginTop: 1 }}>{opt.desc}</div>
                     </div>
                   </button>
                 ))}
@@ -389,47 +370,33 @@ const Reports = () => {
         </div>
       </section>
 
-      {/* Error state */}
-      {error && (
-        <section className="card">
-          <div className="card__body" style={{ padding: "40px", textAlign: "center", color: "var(--empty-state-text)" }}>
-            Could not load report. Please try again.
-          </div>
-        </section>
-      )}
-
-      {/* SECTION 2 — Report panels */}
       {!error && report && (
-        <div style={{ opacity: loading ? 0.5 : 1, transition: "opacity 0.2s" }} className="grid grid--2">
+        <div style={{ opacity: loading ? 0.6 : 1, transition: "opacity 0.3s" }} className="grid grid--2">
           
-          {/* Panel A — Coverage */}
           <section className="card" style={{ gridColumn: "1 / -1" }}>
-            <div className="card__head">
-              <p className="card__title">Coverage</p>
-            </div>
+            <div className="card__head"><p className="card__title">Organizational Coverage</p></div>
             <div className="card__body">
-              <div className="grid grid--3" style={{ marginBottom: 20 }}>
+              <div className="grid grid--3" style={{ marginBottom: 24 }}>
                 <div className="metric">
                   <div>
-                    <div className="value">{report.coverage.active}</div>
-                    <div className="hint">Active employees</div>
+                    <div className="value gradient-teal">{report.coverage.active}</div>
+                    <div className="hint"><div className="pulse-dot" style={{ display: 'inline-block', marginRight: 6, verticalAlign: 'middle' }} />Active Extension</div>
                   </div>
                 </div>
                 <div className="metric">
                   <div>
-                    <div className="value">{report.coverage.inactive}</div>
-                    <div className="hint">Inactive employees</div>
+                    <div className="value gradient-blue">{report.coverage.inactive}</div>
+                    <div className="hint">Inactive Users</div>
                   </div>
                 </div>
                 <div className="metric">
                   <div>
-                    <div className="value">{report.coverage.notInstalled}</div>
-                    <div className="hint">Not installed</div>
+                    <div className="value gradient-red">{report.coverage.notInstalled}</div>
+                    <div className="hint">Unprotected</div>
                   </div>
                 </div>
               </div>
-              
-              <div style={{ width: "100%", height: 220 }}>
+              <div style={{ width: "100%", height: 260 }}>
                 <ResponsiveContainer>
                   <PieChart>
                     <Pie
@@ -438,109 +405,87 @@ const Reports = () => {
                         { name: "Inactive", value: report.coverage.inactive },
                         { name: "Not Installed", value: report.coverage.notInstalled }
                       ]}
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
+                      innerRadius={70}
+                      outerRadius={90}
+                      paddingAngle={8}
+                      stroke="none"
                       dataKey="value"
                     >
-                      {
-                        [
-                          { name: "Active", value: report.coverage.active },
-                          { name: "Inactive", value: report.coverage.inactive },
-                          { name: "Not Installed", value: report.coverage.notInstalled }
-                        ].map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))
-                      }
+                      {COLORS.map((color, index) => <Cell key={`cell-\${index}`} fill={color} />)}
                     </Pie>
-                    <Legend verticalAlign="bottom" height={36} wrapperStyle={{ color: "var(--chart-tick)", fontSize: 12 }} />
-                    <Tooltip contentStyle={{ backgroundColor: "var(--dropdown-bg)", borderColor: "var(--dropdown-border)", color: "var(--text-primary)", borderRadius: 8 }} itemStyle={{ color: "var(--text-primary)" }} />
+                    <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ color: "var(--text-secondary)", fontSize: 12, paddingTop: 20 }} />
+                    <Tooltip contentStyle={{ backgroundColor: "var(--dropdown-bg)", borderColor: "var(--border-color)", color: "var(--text-primary)", borderRadius: 12, border: '1px solid var(--border-color)', backdropFilter: 'blur(10px)' }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
             </div>
           </section>
 
-          {/* Panel B — Platform Usage */}
           <section className="card">
-            <div className="card__head">
-              <p className="card__title">AI Platforms in Use</p>
-            </div>
-            <div className="card__body" style={{ height: 260 }}>
+            <div className="card__head"><p className="card__title">Platform Distribution</p></div>
+            <div className="card__body" style={{ height: 300 }}>
               {report.platformUsage && report.platformUsage.length > 0 ? (
-                <ResponsiveContainer width="100%" height={240}>
-                  <BarChart data={report.platformUsage} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={report.platformUsage} layout="vertical" margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-axis)" horizontal={false} />
-                    <XAxis type="number" tick={{ fill: "var(--chart-tick)", fontSize: 11 }} axisLine={{ stroke: "var(--chart-axis)" }} tickLine={false} />
-                    <YAxis dataKey="platform" type="category" tick={{ fill: "var(--chart-tick)", fontSize: 11 }} axisLine={{ stroke: "var(--chart-axis)" }} tickLine={false} width={80} />
-                    <Tooltip cursor={{ fill: "var(--panel)" }} contentStyle={{ backgroundColor: "var(--dropdown-bg)", borderColor: "var(--dropdown-border)", color: "var(--text-primary)", borderRadius: 8 }} />
-                    <Bar dataKey="count" fill="#25e6d9" fillOpacity={0.85} radius={[0, 4, 4, 0]} barSize={20} />
+                    <XAxis type="number" hide />
+                    <YAxis dataKey="platform" type="category" tick={{ fill: "var(--text-secondary)", fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} width={80} />
+                    <Tooltip cursor={{ fill: "var(--panel)" }} contentStyle={{ backgroundColor: "var(--dropdown-bg)", borderColor: "var(--border-color)", borderRadius: 12 }} />
+                    <Bar dataKey="count" fill="#25e6d9" radius={[0, 4, 4, 0]} barSize={18} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div style={{ textAlign: "center", padding: "80px 0", color: "var(--empty-state-text)", fontSize: 13 }}>No platform usage data</div>
+                <div style={{ textAlign: "center", padding: "100px 0", color: "var(--muted-2)", fontSize: 13 }}>No data</div>
               )}
             </div>
           </section>
 
-          {/* Panel C — Activity Timeline */}
           <section className="card">
-            <div className="card__head">
-              <p className="card__title">Daily Active Users</p>
-            </div>
-            <div className="card__body" style={{ height: 260 }}>
+            <div className="card__head"><p className="card__title">Daily Engagement</p></div>
+            <div className="card__body" style={{ height: 300 }}>
               {report.activityTimeline && report.activityTimeline.length > 0 ? (
-                <ResponsiveContainer width="100%" height={240}>
-                  <LineChart data={report.activityTimeline.map(d => ({ ...d, shortDate: new Date(d.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) }))} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={report.activityTimeline.map(d => ({ ...d, shortDate: new Date(d.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) }))} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-axis)" vertical={false} />
-                    <XAxis dataKey="shortDate" tick={{ fill: "var(--chart-tick)", fontSize: 11 }} axisLine={{ stroke: "var(--chart-axis)" }} tickLine={false} />
-                    <YAxis tick={{ fill: "var(--chart-tick)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ backgroundColor: "var(--dropdown-bg)", borderColor: "var(--dropdown-border)", color: "var(--text-primary)", borderRadius: 8 }} />
-                    <Line type="monotone" dataKey="activeUsers" stroke="#25e6d9" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "#25e6d9", stroke: "#12122a" }} />
+                    <XAxis dataKey="shortDate" tick={{ fill: "var(--text-secondary)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "var(--text-secondary)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ backgroundColor: "var(--dropdown-bg)", borderColor: "var(--border-color)", borderRadius: 12 }} />
+                    <Line type="monotone" dataKey="activeUsers" stroke="#25e6d9" strokeWidth={3} dot={false} activeDot={{ r: 6, fill: "#25e6d9", stroke: "var(--bg-primary)", strokeWidth: 2 }} />
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <div style={{ textAlign: "center", padding: "80px 0", color: "var(--empty-state-text)", fontSize: 13 }}>No timeline data</div>
+                <div style={{ textAlign: "center", padding: "100px 0", color: "var(--muted-2)", fontSize: 13 }}>No data</div>
               )}
             </div>
           </section>
 
-          {/* Panel D — Top Active Employees */}
           <section className="card" style={{ gridColumn: "1 / -1" }}>
-            <div className="card__head">
-              <p className="card__title">Most Active Employees</p>
-            </div>
+            <div className="card__head"><p className="card__title">Most Active Employees</p></div>
             <div className="card__body">
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Email</th>
+                    <th>Employee</th>
                     <th>Days Active</th>
-                    <th>Platforms</th>
+                    <th>Observed Platforms</th>
                   </tr>
                 </thead>
                 <tbody>
                   {report.topActiveEmployees && report.topActiveEmployees.map((emp, idx) => (
                     <tr key={idx}>
-                      <td>{emp.email}</td>
-                      <td>{emp.daysActive}</td>
-                      <td style={{ color: "rgba(124,243,255,.92)" }}>{emp.platforms.join(", ")}</td>
-                    </tr>
-                  ))}
-                  {(!report.topActiveEmployees || report.topActiveEmployees.length === 0) && (
-                    <tr>
-                      <td colSpan={3} style={{ textAlign: "center", padding: "40px 0", color: "var(--empty-state-text)" }}>
-                        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5, marginBottom: 8 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                        <br/>
-                        No active employees found in this period.
+                      <td style={{ fontWeight: 600 }}>{emp.email}</td>
+                      <td><span className="badge" style={{ fontFamily: 'var(--mono)' }}>{emp.daysActive} days</span></td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {emp.platforms.map(p => <span key={p} className="badge badge--employee" style={{ fontSize: 10 }}>{p}</span>)}
+                        </div>
                       </td>
                     </tr>
-                  )}
+                  ))}
                 </tbody>
               </table>
             </div>
           </section>
-
         </div>
       )}
     </div>

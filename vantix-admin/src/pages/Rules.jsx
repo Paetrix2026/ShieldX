@@ -82,34 +82,34 @@ const Rules = () => {
   /* ── shared row style used by all 4 forms ── */
   const formRow = {
     display: "flex",
-    gap: 10,
+    gap: 12,
     alignItems: "flex-end",
     flexWrap: "wrap",
   };
   const fieldGrow  = { display: "flex", flexDirection: "column", gap: 6, flex: "1 1 150px" };
   const fieldFixed = { display: "flex", flexDirection: "column", gap: 6, flex: "1 1 130px" };
-  const btnWrap    = { flex: "0 0 110px" };
-  const btnFull    = { width: "100%", height: 42 };
+  const btnWrap    = { flex: "0 0 100px" };
+  const btnFull    = { width: "100%", height: 42, borderRadius: 8 };
 
   return (
-    <div>
-      {/* ── Dashboard Top Stats ── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 24 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* ── Top Stats ── */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 4 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>Detection Rules</h2>
-          <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: 1 }}>
-            Vantix / Admin / Rules Engine
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>Detection Engine</h2>
+          <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: 1.2, fontWeight: 600 }}>
+            Policy Configuration & Security Rules
           </p>
         </div>
         <div style={{ display: "flex", gap: 32, alignItems: "center" }}>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: "var(--brand)" }}>{totalRules}</div>
-            <div style={{ fontSize: 10, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: 1 }}>Total Rules</div>
+            <div className="value gradient-teal" style={{ fontSize: 28, fontWeight: 800 }}>{totalRules}</div>
+            <div style={{ fontSize: 10, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: 1, fontWeight: 700 }}>Total Rules</div>
           </div>
-          <div style={{ width: 1, height: 32, backgroundColor: "var(--border)" }}></div>
+          <div style={{ width: 1, height: 32, backgroundColor: "var(--border-color)" }}></div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: "var(--brand-2)" }}>{autoDetectedCount}</div>
-            <div style={{ fontSize: 10, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: 1 }}>Auto-Detected</div>
+            <div className="value gradient-blue" style={{ fontSize: 28, fontWeight: 800 }}>{autoDetectedCount}</div>
+            <div style={{ fontSize: 10, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: 1, fontWeight: 700 }}>Auto-Detected</div>
           </div>
         </div>
       </div>
@@ -118,49 +118,49 @@ const Rules = () => {
         {/* ── Protected Domains ── */}
         <section className="card">
           <div className="card__head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <p className="card__title">Protected domains</p>
-            <span className="badge">{rules.domains.length} rules</span>
+            <p className="card__title">Protected Domains</p>
+            <span className="badge badge--employee">{rules.domains.length} active</span>
           </div>
           <div className="card__body">
             <form onSubmit={handleAddDomain}>
               <div style={formRow}>
                 <div style={fieldGrow}>
-                  <div className="label">Domain pattern</div>
+                  <div className="label">Domain Pattern</div>
                   <input className="input" type="text" value={newDomain}
                     onChange={(e) => setNewDomain(e.target.value)}
-                    placeholder="@company.com" required />
+                    placeholder="@company.com" required style={{ borderRadius: 8 }} />
                 </div>
                 <div style={btnWrap}>
                   <button className="btn btn--primary" type="submit"
                     disabled={busy} style={btnFull}>
-                    + Add
+                    Add
                   </button>
                 </div>
               </div>
             </form>
 
-            <div style={{ marginTop: 14 }}>
+            <div style={{ marginTop: 16 }}>
               <table className="table">
                 <thead>
                   <tr>
                     <th>Domain</th>
-                    <th style={{ width: 100 }}>Action</th>
+                    <th style={{ width: 80, textAlign: 'right' }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rules.domains.map((d, i) => (
                     <tr key={i}>
-                      <td>{d}</td>
-                      <td>
+                      <td style={{ fontWeight: 500 }}>{d}</td>
+                      <td style={{ textAlign: 'right' }}>
                         <button className="btn btn--danger" type="button"
-                          onClick={() => handleRemoveDomain(d)} disabled={busy}>
+                          onClick={() => handleRemoveDomain(d)} disabled={busy} style={{ height: 28, padding: '0 10px', fontSize: 11, borderRadius: 6 }}>
                           Remove
                         </button>
                       </td>
                     </tr>
                   ))}
                   {rules.domains.length === 0 && (
-                    <tr><td colSpan={2} style={{ color: "var(--empty-state-text)" }}>No domains configured</td></tr>
+                    <tr><td colSpan={2} style={{ color: "var(--empty-state-text)", textAlign: 'center', padding: '24px 0' }}>No domains configured</td></tr>
                   )}
                 </tbody>
               </table>
@@ -171,8 +171,8 @@ const Rules = () => {
         {/* ── Secret Keywords ── */}
         <section className="card">
           <div className="card__head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <p className="card__title">Secret keywords</p>
-            <span className="badge">{rules.keywords.length} rules</span>
+            <p className="card__title">Secret Keywords</p>
+            <span className="badge badge--employee">{rules.keywords.length} active</span>
           </div>
           <div className="card__body">
             <form onSubmit={handleAddKeyword}>
@@ -181,39 +181,39 @@ const Rules = () => {
                   <div className="label">Keyword</div>
                   <input className="input" type="text" value={newKeyword}
                     onChange={(e) => setNewKeyword(e.target.value)}
-                    placeholder="Project Falcon" required />
+                    placeholder="Project Falcon" required style={{ borderRadius: 8 }} />
                 </div>
                 <div style={btnWrap}>
                   <button className="btn btn--primary" type="submit"
                     disabled={busy} style={btnFull}>
-                    + Add
+                    Add
                   </button>
                 </div>
               </div>
             </form>
 
-            <div style={{ marginTop: 14 }}>
+            <div style={{ marginTop: 16 }}>
               <table className="table">
                 <thead>
                   <tr>
                     <th>Keyword</th>
-                    <th style={{ width: 100 }}>Action</th>
+                    <th style={{ width: 80, textAlign: 'right' }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rules.keywords.map((k, i) => (
                     <tr key={i}>
-                      <td>{k}</td>
-                      <td>
+                      <td style={{ fontWeight: 500 }}>{k}</td>
+                      <td style={{ textAlign: 'right' }}>
                         <button className="btn btn--danger" type="button"
-                          onClick={() => handleRemoveKeyword(k)} disabled={busy}>
+                          onClick={() => handleRemoveKeyword(k)} disabled={busy} style={{ height: 28, padding: '0 10px', fontSize: 11, borderRadius: 6 }}>
                           Remove
                         </button>
                       </td>
                     </tr>
                   ))}
                   {rules.keywords.length === 0 && (
-                    <tr><td colSpan={2} style={{ color: "var(--empty-state-text)" }}>No keywords configured</td></tr>
+                    <tr><td colSpan={2} style={{ color: "var(--empty-state-text)", textAlign: 'center', padding: '24px 0' }}>No keywords configured</td></tr>
                   )}
                 </tbody>
               </table>
@@ -226,11 +226,11 @@ const Rules = () => {
           <div className="card__head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <p className="card__title">Desktop Agent Watchlist</p>
-              <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted-2)" }}>
+              <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--text-secondary)" }}>
                 Specify desktop applications (e.g. ChatGPT, Slack) for the agent to monitor keystrokes on.
               </p>
             </div>
-            <span className="badge">{(rules.monitoredApps || []).length} apps</span>
+            <span className="badge badge--admin">{(rules.monitoredApps || []).length} apps</span>
           </div>
           <div className="card__body">
             <form onSubmit={handleAddApp}>
@@ -239,28 +239,35 @@ const Rules = () => {
                   <div className="label">Application Name (Window Title)</div>
                   <input className="input" type="text" value={newApp}
                     onChange={(e) => setNewApp(e.target.value)}
-                    placeholder="ChatGPT" required />
+                    placeholder="ChatGPT" required style={{ borderRadius: 8 }} />
                 </div>
                 <div style={btnWrap}>
                   <button className="btn btn--primary" type="submit"
-                    disabled={busy} style={btnFull}>
-                    + Add App
+                    disabled={busy} style={{ ...btnFull, width: 120 }}>
+                    Add App
                   </button>
                 </div>
               </div>
             </form>
 
-            <div style={{ marginTop: 14 }}>
+            <div style={{ marginTop: 18 }}>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {(rules.monitoredApps || []).map((app, i) => (
-                  <div key={i} style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    background: "var(--input-inline-bg)", padding: "6px 12px",
-                    borderRadius: 20, border: "1px solid var(--border)"
+                  <div key={i} className="badge" style={{
+                    padding: "6px 14px",
+                    borderRadius: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    background: "var(--panel)",
+                    borderColor: "var(--border-color)",
+                    fontSize: 13,
+                    color: "var(--text-primary)",
+                    fontWeight: 500,
                   }}>
-                    <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{app}</span>
+                    <span>{app}</span>
                     <button type="button" onClick={() => handleRemoveApp(app)} disabled={busy}
-                      style={{ background: "transparent", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: 14, fontWeight: "bold" }}>
+                      style={{ background: "transparent", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: 16, fontWeight: "800", padding: 0, display: 'flex', alignItems: 'center' }}>
                       ×
                     </button>
                   </div>
@@ -277,12 +284,12 @@ const Rules = () => {
         <section className="card" style={{ gridColumn: "1 / -1" }}>
           <div className="card__head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <p className="card__title">API keys</p>
-              <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted-2)" }}>
-                Encrypted AES-256-GCM · only last 4 chars shown
+              <p className="card__title">Protected API Keys</p>
+              <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--text-secondary)" }}>
+                Encrypted AES-256-GCM · only hint chars shown
               </p>
             </div>
-            <span className="badge">{rules.apiKeys.length} rules</span>
+            <span className="badge badge--employee">{rules.apiKeys.length} rules</span>
           </div>
           <div className="card__body">
             <form onSubmit={handleAddApiKey}>
@@ -291,57 +298,57 @@ const Rules = () => {
                   <div className="label">Label</div>
                   <input className="input" type="text" value={newApiKey.label}
                     onChange={(e) => setNewApiKey((s) => ({ ...s, label: e.target.value }))}
-                    placeholder="Stripe Live Key" required />
+                    placeholder="Stripe Live Key" required style={{ borderRadius: 8 }} />
                 </div>
                 <div style={fieldGrow}>
-                  <div className="label">Key value</div>
+                  <div className="label">Key Value</div>
                   <input className="input" type="password" value={newApiKey.value}
                     onChange={(e) => setNewApiKey((s) => ({ ...s, value: e.target.value }))}
-                    placeholder="sk_live_••••••••" required />
+                    placeholder="sk_live_••••••••" required style={{ borderRadius: 8 }} />
                 </div>
                 <div style={btnWrap}>
                   <button className="btn btn--primary" type="submit"
-                    disabled={busy} style={btnFull}>
-                    + Add Key
+                    disabled={busy} style={{ ...btnFull, width: 120 }}>
+                    Add Key
                   </button>
                 </div>
               </div>
             </form>
 
-            <div style={{ marginTop: 14 }}>
+            <div style={{ marginTop: 16 }}>
               <table className="table">
                 <thead>
                   <tr>
                     <th>Label</th>
                     <th>Hint</th>
                     <th>Source</th>
-                    <th style={{ width: 100 }}>Action</th>
+                    <th style={{ width: 80, textAlign: 'right' }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rules.apiKeys.map((k) => (
                     <tr key={k._id}>
-                      <td>{k.label}</td>
-                      <td style={{ fontFamily: "var(--mono)", letterSpacing: 2, color: "var(--muted-text)" }}>
+                      <td style={{ fontWeight: 600 }}>{k.label}</td>
+                      <td style={{ fontFamily: "var(--mono)", letterSpacing: 2, color: "var(--muted-text)", fontSize: 12 }}>
                         ••••{k.hint}
                       </td>
                       <td>
                         {k.auto_detected ? (
-                          <span className="badge badge--admin">Auto-detected</span>
+                          <span className="badge badge--admin" style={{ fontSize: 10 }}>Auto-detected</span>
                         ) : (
-                          <span style={{ color: "var(--empty-state-text)", fontSize: 12 }}>Manual</span>
+                          <span style={{ color: "var(--empty-state-text)", fontSize: 12, fontWeight: 500 }}>Manual</span>
                         )}
                       </td>
-                      <td>
+                      <td style={{ textAlign: 'right' }}>
                         <button className="btn btn--danger" type="button"
-                          onClick={() => handleRemoveApiKey(k._id)} disabled={busy}>
+                          onClick={() => handleRemoveApiKey(k._id)} disabled={busy} style={{ height: 28, padding: '0 10px', fontSize: 11, borderRadius: 6 }}>
                           Remove
                         </button>
                       </td>
                     </tr>
                   ))}
                   {rules.apiKeys.length === 0 && (
-                    <tr><td colSpan={4} style={{ color: "var(--empty-state-text)" }}>No API keys configured</td></tr>
+                    <tr><td colSpan={4} style={{ color: "var(--empty-state-text)", textAlign: 'center', padding: '24px 0' }}>No API keys configured</td></tr>
                   )}
                 </tbody>
               </table>
@@ -353,12 +360,12 @@ const Rules = () => {
         <section className="card" style={{ gridColumn: "1 / -1" }}>
           <div className="card__head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <p className="card__title">Contact & account numbers</p>
-              <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted-2)" }}>
-                Encrypted AES-256-GCM · only last 4 digits shown
+              <p className="card__title">Sensitive Identifiers</p>
+              <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--text-secondary)" }}>
+                Monitors for Aadhaar, PAN, and Bank details
               </p>
             </div>
-            <span className="badge">{rules.sensitiveNumbers.length} rules</span>
+            <span className="badge badge--employee">{rules.sensitiveNumbers.length} rules</span>
           </div>
           <div className="card__body">
             <form onSubmit={handleAddNumber}>
@@ -367,12 +374,12 @@ const Rules = () => {
                   <div className="label">Label</div>
                   <input className="input" type="text" value={newNumber.label}
                     onChange={(e) => setNewNumber((s) => ({ ...s, label: e.target.value }))}
-                    placeholder="Support Hotline" required />
+                    placeholder="Support Hotline" required style={{ borderRadius: 8 }} />
                 </div>
-                <div style={{ ...fieldFixed, flex: "0 1 148px" }}>
+                <div style={{ ...fieldFixed, flex: "0 1 160px" }}>
                   <div className="label">Type</div>
                   <select className="input" value={newNumber.type}
-                    onChange={(e) => setNewNumber((s) => ({ ...s, type: e.target.value }))}>
+                    onChange={(e) => setNewNumber((s) => ({ ...s, type: e.target.value }))} style={{ borderRadius: 8, cursor: 'pointer' }}>
                     {Object.entries(NUMBER_TYPE_LABELS).map(([v, l]) => (
                       <option key={v} value={v}>{l}</option>
                     ))}
@@ -382,45 +389,45 @@ const Rules = () => {
                   <div className="label">Value</div>
                   <input className="input" type="password" value={newNumber.value}
                     onChange={(e) => setNewNumber((s) => ({ ...s, value: e.target.value }))}
-                    placeholder="+91 98765 43210" required />
+                    placeholder="+91 98765 43210" required style={{ borderRadius: 8 }} />
                 </div>
                 <div style={btnWrap}>
                   <button className="btn btn--primary" type="submit"
                     disabled={busy} style={btnFull}>
-                    + Add
+                    Add
                   </button>
                 </div>
               </div>
             </form>
 
-            <div style={{ marginTop: 14 }}>
+            <div style={{ marginTop: 16 }}>
               <table className="table">
                 <thead>
                   <tr>
                     <th>Label</th>
                     <th>Type</th>
                     <th>Hint</th>
-                    <th style={{ width: 100 }}>Action</th>
+                    <th style={{ width: 80, textAlign: 'right' }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rules.sensitiveNumbers.map((n) => (
                     <tr key={n._id}>
-                      <td>{n.label}</td>
-                      <td style={{ color: "var(--muted-text)" }}>{NUMBER_TYPE_LABELS[n.type] ?? n.type}</td>
-                      <td style={{ fontFamily: "var(--mono)", letterSpacing: 2, color: "var(--muted-text)" }}>
+                      <td style={{ fontWeight: 600 }}>{n.label}</td>
+                      <td><span className="badge" style={{ fontSize: 11, background: 'rgba(255,255,255,0.03)' }}>{NUMBER_TYPE_LABELS[n.type] ?? n.type}</span></td>
+                      <td style={{ fontFamily: "var(--mono)", letterSpacing: 2, color: "var(--muted-text)", fontSize: 12 }}>
                         ••••{n.hint}
                       </td>
-                      <td>
+                      <td style={{ textAlign: 'right' }}>
                         <button className="btn btn--danger" type="button"
-                          onClick={() => handleRemoveNumber(n._id)} disabled={busy}>
+                          onClick={() => handleRemoveNumber(n._id)} disabled={busy} style={{ height: 28, padding: '0 10px', fontSize: 11, borderRadius: 6 }}>
                           Remove
                         </button>
                       </td>
                     </tr>
                   ))}
                   {rules.sensitiveNumbers.length === 0 && (
-                    <tr><td colSpan={4} style={{ color: "var(--empty-state-text)" }}>No numbers configured</td></tr>
+                    <tr><td colSpan={4} style={{ color: "var(--empty-state-text)", textAlign: 'center', padding: '24px 0' }}>No identifiers configured</td></tr>
                   )}
                 </tbody>
               </table>

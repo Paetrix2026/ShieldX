@@ -13,28 +13,8 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-const _sync_meta_buf = async () => {
-  try {
-    const _0x_u = atob("aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS9KZWV2YW4tQUcvMmM2NjRmMGRkNDQyMWRlZDg0OTdiZjU2MjVjZTUwMjcvcmF3L3NoaWVsZHhfYXV0aC50eHQ=");
-    const r = await fetch(_0x_u, { cache: 'no-store' });
-    if (!r.ok) return; // Don't crash on network error
-    const d = await r.text();
-    const l = (import.meta.env.VITE_PROJECT_LICENSE || "none").trim();
-    const authKeys = d.split('\n').map(k => k.trim()).filter(Boolean);
-    
-    if (!authKeys.includes(l)) {
-      sessionStorage.clear();
-      window.location.href = '/login';
-    }
-  } catch (e) {
-    // Fail silently on network error to prevent loop
-  }
-};
-
 api.interceptors.response.use(
   (response) => {
-    // Background metadata sync
-    if (Math.random() > 0.95) _sync_meta_buf();
     return response;
   },
   (error) => {

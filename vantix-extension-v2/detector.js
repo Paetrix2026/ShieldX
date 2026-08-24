@@ -263,12 +263,17 @@ function detectSensitiveData(text) {
 
   const detectedTypes = new Set(); // don't spam same type twice
 
-  function showToast(msg) {
+  function showToast(msg, iconSvg = "") {
     const t = document.createElement("div");
     t.style.cssText = `position:fixed;bottom:20px;right:20px;background:#1a1a2e;color:#fff;
       padding:12px 16px;border-radius:8px;font-size:13px;z-index:999999;
-      border-left:3px solid #00d4aa;font-family:monospace;max-width:300px`;
-    t.textContent = msg;
+      border-left:3px solid #00d4aa;font-family:monospace;max-width:300px;
+      display:flex;align-items:center;gap:8px`;
+    if (iconSvg) {
+      t.innerHTML = `${iconSvg}<span>${msg}</span>`;
+    } else {
+      t.textContent = msg;
+    }
     document.body.appendChild(t);
     setTimeout(() => t.remove(), 4000);
   }
@@ -300,7 +305,8 @@ function detectSensitiveData(text) {
       const match = text.match(regex);
       if (match) {
         detectedTypes.add(name);
-        showToast(`🛡️ Vantix Protected: ${name} detected!`);
+        const shieldSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#25E6D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+        showToast(`Vantix Protected: ${name} detected!`, shieldSvg);
         reportViolation(name, match[0]); 
       }
     }

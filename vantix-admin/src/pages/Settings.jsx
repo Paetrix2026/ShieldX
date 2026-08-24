@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../utils/api";
+import { Lock, Unlock } from "lucide-react";
 
 const Settings = () => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -251,9 +252,22 @@ const Settings = () => {
                 color: isProjectActive ? "#fff" : "#051226",
                 fontWeight: 700,
                 borderRadius: 8,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
               }}
             >
-              {isProjectActive ? "🔒 Terminate Project Access" : "🔓 Restore Project Access"}
+              {isProjectActive ? (
+                <>
+                  <Lock size={16} />
+                  Terminate Project Access
+                </>
+              ) : (
+                <>
+                  <Unlock size={16} />
+                  Restore Project Access
+                </>
+              )}
             </button>
             <span className="badge" style={{
               borderColor: isProjectActive ? 'rgba(46,229,157,.25)' : 'rgba(255,77,109,.25)',

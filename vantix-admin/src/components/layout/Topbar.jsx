@@ -41,7 +41,7 @@ function routeMeta(pathname) {
   return { title: "Vantix Admin", subtitle: "Secure-by-default operations." };
 }
 
-export default function Topbar({ title, subtitle, onLogout }) {
+export default function Topbar({ title, subtitle }) {
   const { pathname } = useLocation();
   const meta = routeMeta(pathname);
   const finalTitle = title || meta.title;

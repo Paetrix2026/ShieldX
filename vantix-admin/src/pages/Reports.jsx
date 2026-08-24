@@ -411,7 +411,7 @@ const Reports = () => {
                       stroke="none"
                       dataKey="value"
                     >
-                      {COLORS.map((color, index) => <Cell key={`cell-\${index}`} fill={color} />)}
+                      {COLORS.map((color, index) => <Cell key={`cell-${index}`} fill={color} />)}
                     </Pie>
                     <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ color: "var(--text-secondary)", fontSize: 12, paddingTop: 20 }} />
                     <Tooltip contentStyle={{ backgroundColor: "var(--dropdown-bg)", borderColor: "var(--border-color)", color: "var(--text-primary)", borderRadius: 12, border: '1px solid var(--border-color)', backdropFilter: 'blur(10px)' }} />

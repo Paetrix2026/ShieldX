@@ -93,7 +93,7 @@
             document.getElementById('downloadBtn').addEventListener('click', () => {
                 canvases.forEach(c => {
                     const link = document.createElement('a');
-                    link.download = \`icon\${c.size}.png\`;
+                    link.download = `icon${c.size}.png`;
                     link.href = c.element.toDataURL('image/png');
                     link.click();
                 });

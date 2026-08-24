@@ -38,9 +38,8 @@ function NavItem({ to, icon, label }) {
   const { pathname } = useLocation();
   const active = pathname === to;
   return (
-    <Link to={to} data-active={active ? "true" : "false"}>
+    <Link to={to} data-active={active ? "true" : "false"} title={label}>
       {icon}
-      <span>{label}</span>
     </Link>
   );
 }
@@ -50,10 +49,6 @@ export default function Sidebar({ onLogout }) {
     <aside className="sidebar">
       <div className="sidebar__brand">
         <img src={logo} alt="Vantix" />
-        <div className="title">
-          <strong>Vantix Admin</strong>
-          <span>Defend before you send</span>
-        </div>
       </div>
 
       <nav className="nav" aria-label="Primary">
@@ -67,13 +62,11 @@ export default function Sidebar({ onLogout }) {
 
       <div className="sidebar__footer">
         <button
-          className="btn btn--ghost"
           onClick={onLogout}
           type="button"
-          style={{ width: '100%', justifyContent: 'flex-start', gap: 10, fontSize: 13, color: 'var(--text-secondary)' }}
+          style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.6)", cursor: "pointer", width: "56px", height: "56px", borderRadius: "20px", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
         >
-          <IconLogout style={{ width: 16, height: 16 }} />
-          Sign out
+          <IconLogout style={{ width: 24, height: 24 }} />
         </button>
       </div>
     </aside>

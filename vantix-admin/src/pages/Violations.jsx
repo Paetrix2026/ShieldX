@@ -1,326 +1,351 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../utils/api';
-import { Shield, ExternalLink, Search, Filter, Calendar, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Download, ChevronUp, Bell, Target, Layers } from 'lucide-react';
 
 const Violations = () => {
-    const [violations, setViolations] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [filterType, setFilterType] = useState('');
-    const [searchTerm, setSearchTerm] = useState('');
     const [stats, setStats] = useState({});
-    const [topPlatform, setTopPlatform] = useState('N/A');
+    const [trends, setTrends] = useState([]);
+    const [_loading, setLoading] = useState(true);
 
-    const fetchViolations = useCallback(async () => {
+    const handleDownload = () => {
+        if (!stats) return;
+        
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Violation Type,Captured Events\n";
+        
+        Object.keys(stats).forEach(key => {
+            if (key !== 'total' && key !== 'totalEvents' && key !== 'uniqueUsers') {
+                csvContent += `${key},${stats[key]}\n`;
+            }
+        });
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `vantix_violations_report.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const params = new URLSearchParams({
-                page,
-                limit: 15,
-                type: filterType,
-                search: searchTerm
-            });
-            const res = await api.get(`/violations?${params.toString()}`);
-            if (res.data.success) {
-                setViolations(res.data.violations);
-                setTotalPages(res.data.pages || 1);
-            }
-            
-            const statsRes = await api.get('/violations/stats');
+            const [statsRes, trendsRes] = await Promise.all([
+                api.get('/violations/stats'),
+                api.get('/analytics/trends')
+            ]);
             if (statsRes.data.success) {
                 setStats(statsRes.data.stats);
             }
-
-            // Calculate top platform from recent violations
-            if (res.data.violations && res.data.violations.length > 0) {
-                const platforms = res.data.violations.map(v => {
-                    if (v.url.includes('chatgpt.com')) return 'ChatGPT';
-                    if (v.url.includes('gemini.google.com')) return 'Gemini';
-                    if (v.url.includes('claude.ai')) return 'Claude';
-                    return 'Other';
-                });
-                const counts = platforms.reduce((acc, p) => ({ ...acc, [p]: (acc[p] || 0) + 1 }), {});
-                const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-                if (sorted.length > 0) {
-                    setTopPlatform(sorted[0][0]);
-                }
+            if (trendsRes.data.success) {
+                setTrends(trendsRes.data.trends);
             }
         } catch (err) {
-            console.error("Error fetching violations", err);
+            console.error("Error fetching data", err);
         } finally {
             setLoading(false);
         }
-    }, [page, filterType, searchTerm]);
+    }, []);
 
     useEffect(() => {
-        fetchViolations();
-    }, [fetchViolations]);
+        fetchData();
+    }, [fetchData]);
 
-    const formatUrl = (url) => {
-        if (!url || url === "presidio-scan") return "System Scan";
-        try {
-            const u = new URL(url);
-            return u.hostname + (u.pathname.length > 1 ? u.pathname : "");
-        } catch (e) {
-            return url;
-        }
-    };
+    // Compute dynamic node map based on stats
+    const breakdownKeys = Object.keys(stats).filter(k => k !== 'total' && k !== 'uniqueUsers');
+    const nodes = breakdownKeys.map((key, i) => {
+        const angle = (i / Math.max(breakdownKeys.length, 1)) * 2 * Math.PI - Math.PI / 2;
+        const radius = 220 + (i % 2 === 0 ? 0 : 80); // stagger radii
+        return {
+            id: i,
+            label: key,
+            value: stats[key],
+            x: Math.cos(angle) * radius,
+            y: Math.sin(angle) * radius,
+            size: 70 + Math.min(stats[key] * 2, 50)
+        };
+    });
 
-    const getSeverity = (type) => {
-        const critical = ['Credit Card', 'API Key', 'Aadhaar Number', 'PAN Number', 'AADHAAR_NUMBER', 'PAN_NUMBER'];
-        if (critical.includes(type)) return 'Critical';
-        return 'High';
-    };
-
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
-    };
-
-    const itemVariants = {
-        hidden: { y: 16, opacity: 0 },
-        visible: { y: 0, opacity: 1, transition: { duration: 0.4, ease: 'easeOut' } }
-    };
-
-    const rowVariants = {
-        hidden: { opacity: 0, x: -8 },
-        visible: { opacity: 1, x: 0 },
-        exit: { opacity: 0, x: 8 }
-    };
+    const criticalLeaks = (stats['Credit Card'] || 0) + (stats['AADHAAR_NUMBER'] || 0) + (stats['PAN_NUMBER'] || 0);
 
     return (
-        <motion.div 
-            initial="hidden" 
-            animate="visible" 
-            variants={containerVariants}
-            style={{ display: "flex", flexDirection: "column", gap: "20px" }}
-        >
-            
-            {/* Quick Stats */}
-            <motion.div variants={itemVariants} className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
-                <div className="card">
-                    <div className="card__head"><p className="card__title">Total Blocked</p></div>
-                    <div className="card__body metric">
-                        <div>
-                            <div className="value gradient-teal">{stats.total || 0}</div>
-                            <div className="hint">All time</div>
-                        </div>
-                        <Shield size={28} style={{ color: 'var(--brand)', opacity: 0.2 }} />
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '800px', position: 'relative' }}>
+            <style>{`
+                .orion-content {
+                    position: relative;
+                    z-index: 1;
+                    display: grid;
+                    grid-template-columns: 320px 1fr 320px;
+                    gap: 40px;
+                    flex: 1;
+                }
+
+                .orion-col { display: flex; flex-direction: column; gap: 32px; }
+                
+                .orion-subtitle { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+                .orion-muted { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+
+                .orion-btn-group { display: flex; gap: 12px; margin-top: 12px; }
+                .orion-btn {
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    font-size: 13px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .orion-btn-primary {
+                    background: #111827;
+                    color: white;
+                    border: 1px solid #111827;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+                .orion-btn-outline {
+                    background: #FFFFFF;
+                    color: #111827;
+                    border: 1px solid #E2E8F0;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                }
+                .orion-btn-outline:hover {
+                    background: #F8FAFC;
+                }
+
+                .orion-big-number {
+                    font-size: 54px;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                    margin: 8px 0;
+                    letter-spacing: -2px;
+                }
+
+                /* Table Card */
+                .orion-table-row {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 12px 0;
+                    font-size: 14px;
+                    border-bottom: 1px solid var(--bg-primary);
+                }
+                .orion-table-row:last-child { border-bottom: none; }
+                .orion-dot { width: 8px; height: 8px; border-radius: 50%; background: #25e6d9; margin-right: 12px; }
+                .orion-row-label { display: flex; align-items: center; flex: 1; color: var(--text-secondary); font-weight: 500; }
+                .orion-row-val { font-weight: 600; color: var(--text-primary); width: 60px; text-align: right; }
+                .orion-row-sub { color: var(--text-secondary); width: 50px; text-align: right; opacity: 0.6; }
+
+                /* Center Mind Map */
+                .orion-mindmap {
+                    position: relative;
+                    width: 100%;
+                    height: 600px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-top: 40px;
+                }
+                .orion-node {
+                    position: absolute;
+                    border-radius: 50%;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    z-index: 10;
+                    box-shadow: 0 12px 32px rgba(138, 88, 252, 0.3);
+                    background: radial-gradient(circle at 30% 30%, #a27bfc 0%, #753be8 100%);
+                    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                }
+                .orion-node:hover { transform: scale(1.1); z-index: 20; }
+                
+                .orion-node-center {
+                    width: 160px; height: 160px;
+                    border-radius: 50%;
+                    background: radial-gradient(circle at 30% 30%, #ff6b8b 0%, #ff4d6d 100%);
+                    box-shadow: 0 12px 40px rgba(255, 77, 109, 0.4);
+                    left: 50%; top: 50%;
+                    transform: translate(-50%, -50%);
+                    position: absolute;
+                    z-index: 15;
+                    border: 12px solid white;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                }
+                .orion-node-center:hover { transform: translate(-50%, -50%) scale(1.05); }
+
+                .orion-node-val { font-weight: 700; font-size: 18px; }
+                .orion-node-label { font-size: 11px; opacity: 0.8; font-weight: 600; text-transform: uppercase; margin-top: 2px; }
+
+                /* Chart Mini */
+                .orion-chart-mini {
+                    display: flex;
+                    align-items: flex-end;
+                    gap: 6px;
+                    height: 50px;
+                    margin-top: 16px;
+                }
+                .orion-bar-mini {
+                    flex: 1;
+                    background: var(--bg-primary);
+                    border-radius: 4px;
+                    position: relative;
+                    overflow: hidden;
+                }
+                .orion-bar-mini-fill {
+                    position: absolute;
+                    bottom: 0; left: 0; right: 0;
+                    background: var(--brand-blue);
+                    border-radius: 4px;
+                }
+                .orion-trend {
+                    display: inline-flex;
+                    align-items: center;
+                    color: var(--brand-blue);
+                    font-size: 13px;
+                    font-weight: 600;
+                    margin-left: 8px;
+                }
+
+
+            `}</style>
+
+            <div className="orion-content">
+                {/* Left Panel */}
+                <div className="orion-col">
+                    <h1 style={{ marginBottom: 24 }}>General statistics</h1>
+
+                    <div style={{ marginTop: 0 }}>
+                        <div className="orion-muted" style={{marginBottom: 0}}>Critical Leaks Blocked</div>
+                        <div className="orion-big-number">{criticalLeaks}</div>
                     </div>
-                </div>
-                <div className="card">
-                    <div className="card__head"><p className="card__title">Critical Leaks</p></div>
-                    <div className="card__body metric">
-                        <div>
-                            <div className="value gradient-red">
-                                {(stats['Credit Card'] || 0) + (stats['AADHAAR_NUMBER'] || 0) + (stats['PAN_NUMBER'] || 0)}
+
+                    <div className="card">
+                        <div className="orion-subtitle" style={{marginBottom: 16}}>Quantity of data</div>
+                        {breakdownKeys.map((key, i) => (
+                            <div className="orion-table-row" key={key}>
+                                <div className="orion-row-label">
+                                    <div className="orion-dot" style={{ background: ['#25e6d9', '#8A58FC', '#ff4d6d', '#ffb020'][i % 4] }}></div>
+                                    {key}
+                                </div>
+                                <div className="orion-row-val">{stats[key]}</div>
+                                <div className="orion-row-sub">evt</div>
                             </div>
-                            <div className="hint">PII & Financial</div>
-                        </div>
-                    </div>
-                </div>
-                <div className="card">
-                    <div className="card__head"><p className="card__title">Unique Users</p></div>
-                    <div className="card__body metric">
-                        <div>
-                            <div className="value gradient-blue">{stats.uniqueUsers || 0}</div>
-                            <div className="hint">Active offenders</div>
-                        </div>
-                    </div>
-                </div>
-                <div className="card">
-                    <div className="card__head"><p className="card__title">Top Platform</p></div>
-                    <div className="card__body metric">
-                        <div>
-                            <div className="value gradient-green" style={{ fontSize: 28 }}>{topPlatform}</div>
-                            <div className="hint">Most targeted</div>
-                        </div>
-                    </div>
-                </div>
-            </motion.div>
-
-            {/* Filters & Table */}
-            <motion.section variants={itemVariants} className="card">
-                <div className="card__head" style={{ borderBottom: "1px solid var(--border-color)", paddingBottom: 16 }}>
-                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-                        <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
-                            <Search style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} size={16} />
-                            <input 
-                                type="text" 
-                                placeholder="Search by user email or URL..." 
-                                className="input"
-                                style={{ paddingLeft: 40, width: '100%', borderRadius: 999 }}
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        <select 
-                            className="input"
-                            style={{ borderRadius: 999, minWidth: 160 }}
-                            value={filterType}
-                            onChange={(e) => setFilterType(e.target.value)}
-                        >
-                            <option value="">All Violation Types</option>
-                            <option value="Credit Card">Credit Card</option>
-                            <option value="API Key">API Key</option>
-                            <option value="Email">Email</option>
-                            <option value="Phone">Phone</option>
-                            <option value="Keyword">Keyword</option>
-                            <option value="AADHAAR_NUMBER">Aadhaar</option>
-                            <option value="PAN_NUMBER">PAN</option>
-                        </select>
-                        <button className="btn" style={{ borderRadius: 999 }}>
-                            <Calendar size={16} />
-                            <span>Last 30 Days</span>
-                        </button>
+                        ))}
                     </div>
                 </div>
 
-                <div style={{ overflowX: "auto" }}>
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>Timestamp</th>
-                                <th>Employee</th>
-                                <th>Platform / URL</th>
-                                <th>Violation Type</th>
-                                <th>Severity</th>
-                                <th style={{ textAlign: 'right' }}>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <AnimatePresence mode="popLayout">
-                                {loading && violations.length === 0 ? (
-                                    <motion.tr key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                        <td colSpan={6} style={{ textAlign: "center", padding: "60px 0", color: "var(--empty-state-text)" }}>
-                                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
-                                                <div style={{ width: "24px", height: "24px", border: "2px solid var(--border-color)", borderTopColor: "#25E6D9", borderRadius: "50%", animation: "spin 1s linear infinite" }}></div>
-                                                <span style={{ fontSize: "13px" }}>Refreshing secure logs...</span>
-                                            </div>
-                                        </td>
-                                    </motion.tr>
-                                ) : violations.length === 0 ? (
-                                    <motion.tr key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                        <td colSpan={6} style={{ textAlign: "center", padding: "60px 0", color: "var(--empty-state-text)" }}>
-                                            <Shield size={32} style={{ opacity: 0.3, margin: "0 auto 12px" }} />
-                                            <br/>No violations found matching your criteria.
-                                        </td>
-                                    </motion.tr>
-                                ) : (
-                                    violations.map((v) => {
-                                        const severity = getSeverity(v.matches?.[0]?.type);
-                                        const isCritical = severity === 'Critical';
-                                        
-                                        return (
-                                            <motion.tr 
-                                                key={v._id} 
-                                                variants={rowVariants}
-                                                initial="hidden"
-                                                animate="visible"
-                                                exit="exit"
-                                                layout
-                                            >
-                                                <td style={{ color: "var(--text-secondary)", fontSize: 12, fontFamily: 'var(--mono)' }}>
-                                                    {new Date(v.timestamp).toLocaleString()}
-                                                </td>
-                                                <td>
-                                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                        <span style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{v.email || 'Anonymous'}</span>
-                                                        <span style={{ fontSize: 10, color: "var(--text-secondary)", fontFamily: 'var(--mono)' }}>ID: {v.userId || 'N/A'}</span>
-                                                    </div>
-                                                </td>
-                                                <td style={{ maxWidth: 220 }}>
-                                                    <a 
-                                                        href={v.url === "presidio-scan" ? "#" : v.url} 
-                                                        target="_blank" 
-                                                        rel="noopener noreferrer"
-                                                        style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}
-                                                        onClick={(e) => v.url === "presidio-scan" && e.preventDefault()}
-                                                    >
-                                                        <ExternalLink size={14} style={{ color: "#7CF3FF", flexShrink: 0 }} />
-                                                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#7CF3FF", fontWeight: 500 }} title={v.url}>
-                                                            {formatUrl(v.url)}
-                                                        </span>
-                                                    </a>
-                                                </td>
-                                                <td>
-                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                                                        {(v.matches || []).map((m, idx) => (
-                                                            <span key={idx} className="badge badge--employee" style={{ fontSize: 10, padding: "2px 8px" }}>
-                                                                {m.type}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span className="badge" style={{ 
-                                                        fontSize: 10, 
-                                                        padding: "3px 10px",
-                                                        borderColor: isCritical ? "rgba(255,77,109,.25)" : "rgba(255,176,32,.25)",
-                                                        background: isCritical ? "rgba(255,77,109,.06)" : "rgba(255,176,32,.06)",
-                                                        color: isCritical ? "#FF4D6D" : "#FFB020",
-                                                        fontWeight: 700,
-                                                    }}>
-                                                        {severity}
-                                                    </span>
-                                                </td>
-                                                <td style={{ textAlign: 'right' }}>
-                                                    <button className="btn btn--ghost" style={{ padding: "6px 10px", height: "auto", borderRadius: 8 }}>
-                                                        <Eye size={16} />
-                                                    </button>
-                                                </td>
-                                            </motion.tr>
-                                        );
-                                    })
-                                )}
-                            </AnimatePresence>
-                        </tbody>
-                    </table>
-                </div>
+                {/* Center Mind Map */}
+                <div className="orion-col" style={{ display: 'flex', justifyContent: 'center' }}>
+                    <div className="orion-mindmap">
+                        <svg style={{ position: 'absolute', top: '50%', left: '50%', overflow: 'visible', zIndex: 0 }}>
+                            <defs>
+                                <linearGradient id="gradLine" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stopColor="#ff4d6d" />
+                                    <stop offset="100%" stopColor="#8A58FC" />
+                                </linearGradient>
+                            </defs>
+                            {nodes.map(n => (
+                                <line 
+                                    key={n.id}
+                                    x1="0" y1="0"
+                                    x2={n.x} y2={n.y}
+                                    stroke="url(#gradLine)"
+                                    strokeWidth="3"
+                                />
+                            ))}
+                        </svg>
 
-                {/* Pagination */}
-                <div style={{ 
-                    padding: "14px 20px", 
-                    background: "var(--panel)", 
-                    borderTop: "1px solid var(--border-color)",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    borderRadius: "0 0 12px 12px",
-                }}>
-                    <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>
-                        Showing <span style={{ fontWeight: "600", color: "var(--text-primary)" }}>{violations.length > 0 ? (page - 1) * 15 + 1 : 0}</span> to <span style={{ fontWeight: "600", color: "var(--text-primary)" }}>{Math.min(page * 15, violations.length)}</span> of <span style={{ fontWeight: "600", color: "var(--brand)" }}>{stats.total || 0}</span> results
-                    </p>
-                    <div style={{ display: "flex", gap: "6px" }}>
-                        <button 
-                            onClick={() => setPage(p => Math.max(1, p - 1))} 
-                            disabled={page === 1}
-                            className="btn"
-                            style={{ height: 32, padding: "0 10px", opacity: page === 1 ? 0.3 : 1, borderRadius: 8 }}
-                        >
-                            <ChevronLeft size={16} />
-                        </button>
-                        <span style={{ 
-                            display: 'flex', alignItems: 'center', padding: '0 12px', 
-                            fontSize: 13, fontWeight: 600, color: 'var(--text-primary)',
-                            fontFamily: 'var(--mono)',
-                        }}>
-                            {page} / {totalPages}
-                        </span>
-                        <button 
-                            onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
-                            disabled={page === totalPages}
-                            className="btn"
-                            style={{ height: 32, padding: "0 10px", opacity: page === totalPages ? 0.3 : 1, borderRadius: 8 }}
-                        >
-                            <ChevronRight size={16} />
-                        </button>
+                        {/* Concentric rings behind center node */}
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', width: 300, height: 300, borderRadius: '50%', border: '4px dashed rgba(138,88,252,0.1)', transform: 'translate(-50%, -50%)', zIndex: 1 }}></div>
+
+                        <div className="orion-node-center">
+                            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: 'rgba(255,255,255,0.9)', marginTop: -8 }}>TOTAL</span>
+                            <span style={{ fontSize: 38, fontWeight: 800, marginTop: 4 }}>{stats.total || 0}</span>
+                            <span style={{ fontSize: 10, opacity: 0.8 }}>EVENTS</span>
+                        </div>
+
+                        {nodes.map(n => (
+                            <div 
+                                key={n.id} 
+                                className="orion-node"
+                                style={{
+                                    width: n.size,
+                                    height: n.size,
+                                    left: `calc(50% + ${n.x}px)`,
+                                    top: `calc(50% + ${n.y}px)`,
+                                    transform: 'translate(-50%, -50%)'
+                                }}
+                            >
+                                <span className="orion-node-val">{n.value}</span>
+                                {n.size > 70 && <span className="orion-node-label">{n.label.substring(0, 8)}</span>}
+                            </div>
+                        ))}
                     </div>
                 </div>
-            </motion.section>
-        </motion.div>
+
+                {/* Right Panel */}
+                <div className="orion-col" style={{ alignItems: 'flex-end' }}>
+                    <div style={{ textAlign: 'right', marginBottom: 40 }}>
+                        <div className="orion-btn-group" style={{ justifyContent: 'flex-end' }}>
+                            <button 
+                                className="orion-btn orion-btn-outline" 
+                                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                                onClick={handleDownload}
+                            >
+                                <Download size={16} /> Download CSV Report
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="card" style={{ width: 280, marginBottom: 24 }}>
+                        <div className="orion-subtitle">Violation Trends</div>
+                        <div style={{ display: 'flex', alignItems: 'baseline', marginTop: 8 }}>
+                            <div className="orion-big-number" style={{ margin: 0, fontSize: 32 }}>{stats.totalEvents || 0}</div>
+                        </div>
+                        <div className="orion-muted" style={{ fontSize: 11, marginTop: 4 }}>Total captured events</div>
+                        
+                        <div className="orion-chart-mini">
+                            {trends.length > 0 ? trends.map((val, i) => {
+                                const max = Math.max(...trends, 1);
+                                const h = (val / max) * 100;
+                                return (
+                                    <div key={i} className="orion-bar-mini" style={{ margin: '0 2px' }}>
+                                        <div className="orion-bar-mini-fill" style={{ height: `${h}%` }}></div>
+                                    </div>
+                                )
+                            }) : <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>No trend data available</div>}
+                        </div>
+                    </div>
+
+                    <div className="card" style={{ width: 280 }}>
+                        <div className="orion-subtitle">Active Rules Triggered</div>
+                        <div style={{ display: 'flex', alignItems: 'baseline', marginTop: 8 }}>
+                            <div className="orion-big-number" style={{ margin: 0, fontSize: 32 }}>{breakdownKeys.length}</div>
+                        </div>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
+                            {breakdownKeys.slice(0,5).map((key, i) => (
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div className="orion-dot" style={{ background: ['#2BAEE6', '#8A7BF3', '#76CDA1', '#FDE047'][i % 4], margin: 0 }}></div>
+                                        <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{key}</span>
+                                    </div>
+                                    <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{stats[key]}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     );
 };
 

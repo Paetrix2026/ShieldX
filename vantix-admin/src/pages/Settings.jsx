@@ -126,7 +126,7 @@ const Settings = () => {
             <div className="metric">
               <div>
                 <div className="value" style={{ fontSize: 15, fontFamily: 'var(--mono)', fontWeight: 600, color: 'var(--brand)' }}>
-                  v2.0.0
+                  v1.0.0
                 </div>
                 <div className="hint">Vantix version</div>
               </div>

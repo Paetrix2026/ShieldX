@@ -1,6 +1,25 @@
 import React, { useEffect, useState } from "react";
 import api from "../utils/api";
 
+function StatCard({ title, value, hint, icon, theme, hintColor }) {
+  return (
+    <section className={`card card--pastel-${theme}`} style={{ display: 'flex', flexDirection: 'column', padding: '24px', borderRadius: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div className={`icon--${theme}`}>
+          {icon}
+        </div>
+        <div style={{ fontSize: '32px', fontWeight: '800', color: '#111827', letterSpacing: '-0.5px' }}>
+          {value}
+        </div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: '15px', fontWeight: '500', color: '#111827' }}>{title}</div>
+        <div style={{ fontSize: '13px', fontWeight: '600', color: hintColor, padding: '2px 8px', borderRadius: '12px', background: 'rgba(255,255,255,0.4)' }}>{hint}</div>
+      </div>
+    </section>
+  );
+}
+
 const Employees = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -92,31 +111,31 @@ const Employees = () => {
   return (
     <div className="grid" style={{ gap: 16 }}>
       {/* Quick Stats */}
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
-        <div className="card">
-          <div className="card__body metric" style={{ padding: '16px 20px' }}>
-            <div>
-              <div className="value gradient-teal" style={{ fontSize: 36 }}>{users.length}</div>
-              <div className="hint">Total Employees</div>
-            </div>
-          </div>
-        </div>
-        <div className="card">
-          <div className="card__body metric" style={{ padding: '16px 20px' }}>
-            <div>
-              <div className="value gradient-green" style={{ fontSize: 36 }}>{onlineCount}</div>
-              <div className="hint">Currently Online</div>
-            </div>
-          </div>
-        </div>
-        <div className="card">
-          <div className="card__body metric" style={{ padding: '16px 20px' }}>
-            <div>
-              <div className="value gradient-blue" style={{ fontSize: 36 }}>{users.filter(u => u.role === 'admin').length}</div>
-              <div className="hint">Admins</div>
-            </div>
-          </div>
-        </div>
+      <div className="grid grid--3">
+        <StatCard
+          title="Total Employees"
+          value={users.length}
+          hint="+5.2% ↗"
+          hintColor="#16A34A"
+          theme="blue"
+          icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>}
+        />
+        <StatCard
+          title="Currently Online"
+          value={onlineCount}
+          hint="Active now"
+          hintColor="#8A7BF3"
+          theme="purple"
+          icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>}
+        />
+        <StatCard
+          title="Admins"
+          value={users.filter(u => u.role === 'admin').length}
+          hint="No change"
+          hintColor="var(--text-secondary)"
+          theme="green"
+          icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>}
+        />
       </div>
 
       {/* Main Table */}

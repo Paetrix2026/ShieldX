@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../utils/api";
 
@@ -39,24 +39,40 @@ function Sparkline({ points = [] }) {
   );
 }
 
-function StatCard({ title, value, hint, sparkline, badge, badgeStyle, loading, delay = 0 }) {
+function StatCard({ title, value, hint, icon, theme, loading, hintColor, sparklineData }) {
   return (
-    <section className="card" style={{ animationDelay: `${delay}ms` }}>
-      <div className="card__head">
-        <p className="card__title">{title}</p>
-      </div>
-      <div className="card__body metric">
-        <div>
-          <div className="value" style={{ fontFamily: "var(--mono)", letterSpacing: "-2px" }}>{loading ? "—" : value}</div>
-          <div className="hint" style={{ textTransform: "uppercase", fontSize: "11px", letterSpacing: "0.5px" }}>{hint}</div>
+    <section className={`card card--pastel-${theme}`} style={{ display: 'flex', flexDirection: 'column', padding: '24px', borderRadius: '24px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+        <div className={`icon--${theme}`}>
+          {icon}
         </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-          {sparkline}
-          {badge && (
-            <div className="badge" style={badgeStyle}>{badge}</div>
-          )}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <div style={{ fontSize: '32px', fontWeight: '800', color: '#111827', letterSpacing: '-0.5px', lineHeight: 1 }}>
+            {loading ? "—" : value}
+          </div>
+          <div style={{ fontSize: '12px', fontWeight: '600', color: hintColor, padding: '2px 8px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', marginTop: '8px' }}>
+            {hint}
+          </div>
         </div>
       </div>
+      
+      {sparklineData && (
+        <div style={{ margin: '8px -24px -24px -24px', opacity: 0.6 }}>
+          <Sparkline points={sparklineData} />
+        </div>
+      )}
+      
+      {!sparklineData && (
+        <div style={{ marginTop: 'auto' }}>
+          <div style={{ fontSize: '15px', fontWeight: '500', color: '#111827' }}>{title}</div>
+        </div>
+      )}
+      
+      {sparklineData && (
+        <div style={{ position: 'absolute', bottom: '24px', left: '24px' }}>
+          <div style={{ fontSize: '15px', fontWeight: '500', color: '#111827' }}>{title}</div>
+        </div>
+      )}
     </section>
   );
 }
@@ -154,12 +170,12 @@ const Dashboard = () => {
     return pts;
   }, [trends]);
 
-  const [extensionStatus, setExtensionStatus] = useState("checking");
+  const [_extensionStatus, setExtensionStatus] = useState("checking");
   useEffect(() => {
     const checkExt = () => {
       const EXTENSION_ID = "fhohiejeobmkadffkmblpnnakcfkhadh";
       if (window.chrome && window.chrome.runtime && window.chrome.runtime.sendMessage) {
-        window.chrome.runtime.sendMessage(EXTENSION_ID, { type: "PING" }, (res) => {
+        window.chrome.runtime.sendMessage(EXTENSION_ID, { type: "PING" }, (_res) => {
           if (window.chrome.runtime.lastError) setExtensionStatus("missing");
           else setExtensionStatus("connected");
         });
@@ -183,7 +199,7 @@ const Dashboard = () => {
     try {
       const u = new URL(url);
       return u.hostname + (u.pathname.length > 1 ? u.pathname : "");
-    } catch (e) {
+    } catch (_e) {
       return url;
     }
   };
@@ -193,76 +209,101 @@ const Dashboard = () => {
   const inputStyle = {
     padding: "8px 12px",
     fontSize: 12,
-    background: "var(--input-inline-bg)",
-    border: "1px solid var(--input-inline-border)",
+    background: "#F8FAFC",
+    border: "1px solid #E2E8F0",
     borderRadius: 8,
-    color: "var(--input-inline-color)",
+    color: "#111827",
     outline: "none",
     transition: "border-color 0.2s ease",
   };
 
+  // Custom Dropdown to bypass OS-level styling issues
+  const CustomSelect = ({ value, onChange, options, defaultLabel }) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+      const handleClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+      document.addEventListener("mousedown", handleClick);
+      return () => document.removeEventListener("mousedown", handleClick);
+    }, []);
+
+    return (
+      <div ref={ref} style={{ position: "relative", minWidth: 130 }}>
+        <div 
+          onClick={() => setOpen(!open)}
+          style={{ ...inputStyle, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+        >
+          <span>{value || defaultLabel}</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginLeft: 8, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0)" }}><path d="M6 9l6 6 6-6"></path></svg>
+        </div>
+        {open && (
+          <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, boxShadow: "0 10px 25px rgba(0,0,0,0.05)", zIndex: 50, padding: 4, maxHeight: 200, overflowY: "auto" }}>
+            <div 
+              onClick={() => { onChange(""); setOpen(false); }} 
+              style={{ padding: "8px 12px", cursor: "pointer", fontSize: 12, borderRadius: 4, color: "#111827", background: value === "" ? "#F3F4F6" : "transparent" }}
+              onMouseEnter={(e) => e.target.style.background = "#F9FAFB"}
+              onMouseLeave={(e) => e.target.style.background = value === "" ? "#F3F4F6" : "transparent"}
+            >
+              {defaultLabel}
+            </div>
+            {options.map(opt => (
+              <div 
+                key={opt} 
+                onClick={() => { onChange(opt); setOpen(false); }} 
+                style={{ padding: "8px 12px", cursor: "pointer", fontSize: 12, borderRadius: 4, color: "#111827", background: value === opt ? "#F3F4F6" : "transparent" }}
+                onMouseEnter={(e) => e.target.style.background = "#F9FAFB"}
+                onMouseLeave={(e) => e.target.style.background = value === opt ? "#F3F4F6" : "transparent"}
+              >
+                {opt}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="grid" style={{ gap: 16 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+      <div>
+        <h1 style={{ fontSize: "36px", fontWeight: "600", color: "var(--text-primary)", letterSpacing: "-1px", marginBottom: "8px" }}>Overview statistics</h1>
+        <p className="text-muted">Real-time system load and data leak prevention metrics.</p>
+      </div>
+      <div className="grid" style={{ gap: 24 }}>
       {/* ── Row 1: Stat Cards ── */}
       <div className="grid grid--3">
         <StatCard
           title="Leaks Prevented"
           value={totalLeaks}
-          hint="Policy enforcement across all monitored endpoints"
-          sparkline={<Sparkline points={spark} />}
+          hint="+12.4% ↗"
+          hintColor="#16A34A"
+          theme="blue"
+          icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>}
           loading={loading}
-          delay={0}
+          sparklineData={spark}
         />
 
         <StatCard
           title="Recent Incidents"
           value={recentViolations.length}
-          hint="Latest events from the violations stream"
-          badge={
-            <div style={{ display: "flex", gap: 6 }}>
-              <span className="badge badge--active" style={{ fontSize: 10 }}>
-                <div className="pulse-dot" style={{ width: 6, height: 6 }} /> Live
-              </span>
-              <span className="badge" style={{ 
-                fontSize: 10,
-                borderColor: extensionStatus === "connected" ? "rgba(37,230,217,.25)" : "rgba(255,77,109,.25)",
-                background: extensionStatus === "connected" ? "rgba(37,230,217,.06)" : "rgba(255,77,109,.06)",
-                color: extensionStatus === "connected" ? "#25E6D9" : "#FF4D6D"
-              }}>
-                Ext: {extensionStatus}
-              </span>
-            </div>
-          }
+          hint="-4.2% ↘"
+          hintColor="#DC2626"
+          theme="purple"
+          icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>}
           loading={loading}
-          delay={60}
+          sparklineData={spark.slice().reverse()}
         />
 
         <StatCard
           title="Employee Status"
           value={`${activeCount} / ${teamActivity.length}`}
-          hint="Active employees currently monitored"
-          badge={
-            activeCount > 0 && (
-              <div style={{
-                width: '100%',
-                height: 6,
-                borderRadius: 3,
-                background: 'var(--panel-2)',
-                overflow: 'hidden',
-                minWidth: 100,
-              }}>
-                <div style={{
-                  width: `${teamActivity.length ? (activeCount / teamActivity.length * 100) : 0}%`,
-                  height: '100%',
-                  borderRadius: 3,
-                  background: 'linear-gradient(90deg, #25E6D9, #2EE59D)',
-                  transition: 'width 0.5s ease',
-                }} />
-              </div>
-            )
-          }
+          hint={activeCount > 0 ? `${activeCount} Active ↗` : "0 Active"}
+          hintColor={activeCount > 0 ? "#16A34A" : "#6B7280"}
+          theme="green"
+          icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>}
           loading={loading}
-          delay={120}
+          sparklineData={spark.map(s => s * 0.8)}
         />
       </div>
 
@@ -282,22 +323,43 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {topUsers.map((user, idx) => (
-                  <tr key={idx}>
-                    <td style={{ fontWeight: 500 }}>{user.email}</td>
-                    <td style={{ textAlign: 'right' }}>
-                      <span className="badge" style={{
-                        borderColor: user.violationCount > 5 ? 'rgba(255,77,109,.3)' : 'rgba(255,176,32,.3)',
-                        background: user.violationCount > 5 ? 'rgba(255,77,109,.08)' : 'rgba(255,176,32,.08)',
-                        color: user.violationCount > 5 ? '#FF4D6D' : '#FFB020',
-                        fontFamily: 'var(--mono)',
-                        fontSize: 12,
-                      }}>
-                        {user.violationCount}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {topUsers.map((user, idx) => {
+                  const maxViolations = Math.max(...topUsers.map(u => u.violationCount), 1);
+                  const barWidth = `${(user.violationCount / maxViolations) * 100}%`;
+                  const isCritical = user.violationCount > 5;
+                  
+                  return (
+                    <tr key={idx} className="table-row-hover">
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: isCritical ? '#FF4D6D' : '#8A7BF3', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>
+                            {user.email.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, color: '#111827' }}>{user.email}</div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{isCritical ? 'High Risk' : 'Standard'}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ width: '120px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+                          <span className="badge" style={{
+                            borderColor: isCritical ? 'rgba(255,77,109,.3)' : 'rgba(255,176,32,.3)',
+                            background: isCritical ? 'rgba(255,77,109,.08)' : 'rgba(255,176,32,.08)',
+                            color: isCritical ? '#FF4D6D' : '#FFB020',
+                            fontFamily: 'var(--mono)',
+                            fontSize: 12,
+                          }}>
+                            {user.violationCount} alerts
+                          </span>
+                          <div style={{ width: '100%', height: '4px', background: '#E5E7EB', borderRadius: '2px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: barWidth, background: isCritical ? '#FF4D6D' : '#FFB020', borderRadius: '2px' }} />
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {topUsers.length === 0 && (
                   <tr>
                     <td colSpan={2} style={{ textAlign: "center", padding: "48px 0", color: "var(--empty-state-text)" }}>
@@ -334,12 +396,12 @@ const Dashboard = () => {
               <input type="date" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} style={inputStyle} title="From date" />
               <span style={{ color: "var(--empty-state-text)", fontSize: 12 }}>to</span>
               <input type="date" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} style={inputStyle} title="To date" />
-              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} style={{ ...inputStyle, cursor: "pointer", minWidth: 130 }}>
-                <option value="">All types</option>
-                {violationTypes.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+              <CustomSelect 
+                value={filterType} 
+                onChange={setFilterType} 
+                options={violationTypes} 
+                defaultLabel="All types" 
+              />
             </div>
 
             <table className="table">
@@ -352,25 +414,31 @@ const Dashboard = () => {
               </thead>
               <tbody>
                 {recentViolations.map((v, idx) => (
-                  <tr key={idx}>
-                    <td style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--mono)' }}>
-                      {new Date(v.timestamp).toLocaleString()}
+                  <tr key={idx} className="table-row-hover">
+                    <td style={{ width: '140px' }}>
+                      <div style={{ fontSize: 13, color: '#111827', fontWeight: 500 }}>{new Date(v.timestamp).toLocaleDateString()}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{new Date(v.timestamp).toLocaleTimeString()}</div>
                     </td>
                     <td>
-                      <a 
-                        href={v.url === "presidio-scan" ? "#" : v.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        style={{ color: "#7CF3FF", textDecoration: "none", fontWeight: 500, transition: "color 0.2s" }}
-                        onClick={(e) => v.url === "presidio-scan" && e.preventDefault()}
-                      >
-                        {formatUrl(v.url)}
-                      </a>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ padding: '6px', borderRadius: '8px', background: '#F3F4F6', color: '#6B7280' }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                        </div>
+                        <a 
+                          href={v.url === "presidio-scan" ? "#" : v.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ color: "#2BAEE6", textDecoration: "none", fontWeight: 600, transition: "color 0.2s" }}
+                          onClick={(e) => v.url === "presidio-scan" && e.preventDefault()}
+                        >
+                          {formatUrl(v.url)}
+                        </a>
+                      </div>
                     </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                         {(v.matches || []).map((m, i) => (
-                          <span key={i} className="badge badge--employee" style={{ fontSize: 10, padding: '2px 8px' }}>
+                          <span key={i} className="badge badge--employee" style={{ fontSize: 11, padding: '4px 10px', fontWeight: 600, background: 'rgba(138, 88, 252, 0.08)', color: '#8A7BF3', borderColor: 'rgba(138, 88, 252, 0.2)' }}>
                             {m.type}
                           </span>
                         ))}
@@ -421,15 +489,22 @@ const Dashboard = () => {
                 }
 
                 return (
-                  <tr key={idx}>
-                    <td style={{ fontWeight: 500 }}>{emp.email}</td>
+                  <tr key={idx} className="table-row-hover">
                     <td>
-                      <span className="badge" style={{ ...statusStyle, fontSize: 11 }}>
-                        {emp.status === "active" && <div className="pulse-dot" style={{ width: 6, height: 6, background: '#2EE59D', boxShadow: '0 0 6px #2EE59D' }} />}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#F3F4F6', color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>
+                          {emp.email.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div style={{ fontWeight: 600, color: '#111827' }}>{emp.email}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <span className="badge" style={{ ...statusStyle, fontSize: 11, padding: '4px 10px', fontWeight: 600 }}>
+                        {emp.status === "active" && <div className="pulse-dot" style={{ width: 6, height: 6, background: '#2EE59D', boxShadow: '0 0 6px #2EE59D', marginRight: '6px' }} />}
                         {statusText}
                       </span>
                     </td>
-                    <td style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--mono)' }}>
+                    <td style={{ fontSize: 13, color: 'var(--text-secondary)', textAlign: 'right' }}>
                       {emp.lastActive ? new Date(emp.lastActive).toLocaleString() : "Never"}
                     </td>
                   </tr>
@@ -453,6 +528,7 @@ const Dashboard = () => {
           </table>
         </div>
       </section>
+    </div>
     </div>
   );
 };

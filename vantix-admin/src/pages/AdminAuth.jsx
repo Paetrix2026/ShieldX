@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../utils/api";
 import { Shield, Mail, Lock, Globe, ChevronLeft, Eye, EyeOff, CheckCircle } from "lucide-react";
@@ -11,16 +11,6 @@ const AdminAuth = () => {
   const [loginType, setLoginType] = useState("company"); // "company" or "individual"
   const [companyRole, setCompanyRole] = useState("employee"); // "employee" or "admin"
   const [showPassword, setShowPassword] = useState(false);
-  
-  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("theme-dark"));
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains("theme-dark"));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
 
   const navigate = useNavigate();
 
@@ -46,7 +36,14 @@ const AdminAuth = () => {
       setBusy(true);
       setError("");
 
-      const res = await api.post("/auth/admin-login", { email, password });
+      let endpoint = "/auth/admin-login";
+      if (loginType === "individual") {
+        endpoint = "/auth/individual/login";
+      } else if (loginType === "company" && companyRole === "employee") {
+        endpoint = "/auth/login";
+      }
+
+      const res = await api.post(endpoint, { email, password });
       
       if (res.data.success && res.data.token) {
         const token = res.data.token;

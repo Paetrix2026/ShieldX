@@ -1,30 +1,28 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../utils/api";
-import { Shield, Mail, Lock, Globe, ChevronLeft, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { Shield, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import ThreeScene from "./ThreeScene";
+import "./AdminAuth.css";
 
 const AdminAuth = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [loginType, setLoginType] = useState("company"); // "company" or "individual"
-  const [companyRole, setCompanyRole] = useState("employee"); // "employee" or "admin"
-  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail]         = useState("");
+  const [password, setPassword]   = useState("");
+  const [error, setError]         = useState("");
+  const [busy, setBusy]           = useState(false);
+  const [loginType, setLoginType] = useState("company");
+  const [companyRole, setRole]    = useState("admin");
+  const [showPwd, setShowPwd]     = useState(false);
+  const [focused, setFocused]     = useState(null);
 
   const navigate = useNavigate();
 
-  const syncWithExtension = (token, email) => {
-    const EXTENSION_ID = "fhohiejeobmkadffkmblpnnakcfkhadh";
-    if (window.chrome && window.chrome.runtime && window.chrome.runtime.sendMessage) {
-      window.chrome.runtime.sendMessage(EXTENSION_ID, { 
-        type: "SYNC_AUTH", 
-        token, 
-        email 
-      }, () => {
-        if (window.chrome.runtime.lastError) {
-          console.warn("[Vantix Admin] Extension sync failed. Ensure extension is installed and ID is correct.");
-        }
+  const syncExtension = (token, email) => {
+    const ID = "fhohiejeobmkadffkmblpnnakcfkhadh";
+    if (window.chrome?.runtime?.sendMessage) {
+      window.chrome.runtime.sendMessage(ID, { type: "SYNC_AUTH", token, email }, () => {
+        if (window.chrome.runtime.lastError)
+          console.warn("[ShieldX] Extension sync failed.");
       });
     }
   };
@@ -33,280 +31,202 @@ const AdminAuth = () => {
     e.preventDefault();
     if (!email || !password) return;
     try {
-      setBusy(true);
-      setError("");
-
-      let endpoint = "/auth/admin-login";
-      if (loginType === "individual") {
-        endpoint = "/auth/individual/login";
-      } else if (loginType === "company" && companyRole === "employee") {
-        endpoint = "/auth/login";
-      }
-
-      const res = await api.post(endpoint, { email, password });
-      
+      setBusy(true); setError("");
+      let ep = "/auth/admin-login";
+      if (loginType === "individual") ep = "/auth/individual/login";
+      else if (loginType === "company" && companyRole === "employee") ep = "/auth/login";
+      const res = await api.post(ep, { email, password });
       if (res.data.success && res.data.token) {
-        const token = res.data.token;
-        syncWithExtension(token, email);
-        sessionStorage.setItem("vantixAdminToken", token);
+        syncExtension(res.data.token, email);
+        sessionStorage.setItem("vantixAdminToken", res.data.token);
         navigate("/");
       } else {
         setError(res.data.error || "Login failed");
       }
     } catch (err) {
-      console.error("Login error:", err);
       setError(err.response?.data?.error || "Connection failed. Ensure backend is running.");
     } finally {
       setBusy(false);
     }
   };
 
-  const socialLoginStub = (provider) => {
-    setError(`Social login with ${provider} is being provisioned.`);
-  };
-
   return (
-    <div className="auth-page" style={{ 
-      minHeight: "100vh", 
-      display: "flex", 
-      flexDirection: "column",
-      alignItems: "center", 
-      justifyContent: "center",
-      background: "var(--bg-primary)",
-      position: "relative",
-      overflow: "hidden",
-      padding: "20px"
-    }}>
-      
-      {/* Background Ambience */}
-      <div className="login-bg-grid" style={{
-        position: "absolute",
-        top: 0, left: 0, right: 0, bottom: 0,
-        backgroundImage: "radial-gradient(circle at 2px 2px, rgba(37, 230, 217, 0.05) 1px, transparent 0)",
-        backgroundSize: "40px 40px",
-        zIndex: 0
-      }} />
+    <div className="auth3d-root">
+      {/* Gradient background */}
+      <div className="auth3d-bg" />
+      <div className="auth3d-rain" />
 
-      <div style={{
-        position: "absolute",
-        top: "10%",
-        right: "20%",
-        width: "600px",
-        height: "600px",
-        background: "radial-gradient(circle, rgba(37, 230, 217, 0.03) 0%, transparent 60%)",
-        pointerEvents: "none",
-        zIndex: 0
-      }} />
-      
-      {/* Dynamic Background Text */}
-      <div style={{
-        position: "absolute",
-        top: "5%",
-        left: "50%",
-        transform: "translateX(-50%)",
-        fontSize: "min(22vw, 240px)",
-        fontWeight: "900",
-        fontFamily: "var(--mono)",
-        color: "transparent",
-        WebkitTextStroke: "1px rgba(34, 211, 238, 0.05)",
-        letterSpacing: "-10px",
-        zIndex: 0,
-        pointerEvents: "none",
-        userSelect: "none",
-        whiteSpace: "nowrap",
-        opacity: 0.6
-      }}>
-        OBSIDIAN_OPS
+      {/* Three.js 3D scene */}
+      <ThreeScene />
+
+      {/* Floating code cards */}
+      <div className="code-card" style={{ top: "18%", left: "42%", animationDelay: "0s" }}>
+        <div className="code-line"><span className="code-keyword">def </span><span className="code-rest">shieldx(secure):</span></div>
+        <div className="code-line"><span className="code-keyword">  if </span><span className="code-rest">secure:</span></div>
+        <div className="code-line"><span className="code-rest">    access = True</span></div>
+        <div className="code-line code-dim"><span className="code-keyword">  else:</span></div>
+        <div className="code-line code-dim"><span className="code-rest">    access = False</span></div>
+        <div className="code-line"><span className="code-keyword">  return </span><span className="code-rest">access</span></div>
       </div>
 
-      <div style={{ zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", width: "100%", maxWidth: "460px" }}>
-        
-        {/* Header Branding */}
-        <div style={{ textAlign: "center", marginBottom: "40px" }}>
-          <div style={{ 
-            display: "inline-flex", 
-            alignItems: "center", 
-            justifyContent: "center",
-            width: "80px",
-            height: "80px",
-            background: "rgba(34, 211, 238, 0.05)",
-            borderRadius: "24px",
-            marginBottom: "24px",
-            border: "1px solid rgba(34, 211, 238, 0.15)",
-            boxShadow: "0 0 30px rgba(34, 211, 238, 0.05)"
-          }}>
-            <Shield size={40} color="var(--brand)" />
+      <div className="code-card" style={{ top: "55%", right: "3%", animationDelay: "-4s" }}>
+        <div className="code-line"><span className="code-keyword">def </span><span className="code-rest">authenticate(usr):</span></div>
+        <div className="code-line"><span className="code-keyword">  if </span><span className="code-rest">••••••:</span></div>
+        <div className="code-line"><span className="code-rest">    •••••• = True</span></div>
+        <div className="code-line code-dim"><span className="code-keyword">  else:</span></div>
+        <div className="code-line code-dim"><span className="code-rest">    •••••• = False</span></div>
+        <div className="code-line"><span className="code-keyword">  return </span><span className="code-rest">••••••</span></div>
+      </div>
+
+      {/* Login Panel */}
+      <div className="auth3d-panel">
+
+        <div className="auth3d-logo">
+          <div className="auth3d-logo-icon">
+            <Shield size={24} color="#22d3ee" />
           </div>
-          <h1 style={{ 
-            fontSize: "42px", 
-            fontWeight: "800", 
-            fontFamily: "var(--mono)",
-            textTransform: "uppercase", 
-            margin: 0,
-            letterSpacing: "-2px"
-          }}>
-            <span style={{ color: "var(--brand)", textShadow: "0 0 20px rgba(34, 211, 238, 0.4)" }}>VANTIX</span>
-            <span style={{ color: "var(--text-primary)", marginLeft: "12px" }}>_NODE</span>
-          </h1>
-          <p style={{ color: "var(--muted-2)", fontSize: "13px", marginTop: "12px", fontFamily: "var(--mono)", letterSpacing: "1px" }}>
-            ESTABLISHING SECURE PERIMETER [AUTH_LEVEL_0]
-          </p>
+          <div>
+            <div className="auth3d-logo-name">
+              <span className="auth3d-logo-brand">SHIELD</span>
+              <span className="auth3d-logo-x">X</span>
+            </div>
+            <div className="auth3d-logo-sub">AI-DRIVEN CYBERSECURITY</div>
+          </div>
         </div>
 
-        {/* Main Auth Card */}
-        <div className="card" style={{
-          width: "100%",
-          background: "var(--bg-glass)",
-          backdropFilter: "blur(32px)",
-          border: "1px solid var(--border-color)",
-          borderRadius: "20px",
-          padding: "32px",
-          boxShadow: "0 25px 60px rgba(0,0,0,0.4)"
-        }}>
-          
-          {/* Top Navigation */}
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "32px", alignItems: "center" }}>
-            <button 
-              onClick={() => navigate(-1)}
-              style={{ background: "none", border: "none", color: "var(--brand)", fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", padding: 0 }}
-            >
-              <ChevronLeft size={16} /> Back
-            </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div className="pulse-dot" style={{ width: 8, height: 8 }} />
-              <span style={{ fontSize: '11px', color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '700' }}>Active Node</span>
-            </div>
-          </div>
+        <div className="auth3d-heading">
+          <h1 className="auth3d-title">Secure Access</h1>
+          <p className="auth3d-subtitle">Authenticate to establish your security perimeter</p>
+        </div>
 
-          {/* Login Type Selector (Pills) */}
-          <div style={{ display: "flex", gap: "8px", marginBottom: "24px", background: "rgba(255,255,255,0.03)", padding: "4px", borderRadius: "12px" }}>
-            {["company", "individual"].map(type => (
-              <button 
-                key={type}
-                onClick={() => setLoginType(type)}
-                style={{ 
-                  flex: 1, 
-                  textAlign: "center", 
-                  padding: "10px 0", 
-                  border: "none",
-                  borderRadius: "8px", 
-                  color: loginType === type ? "var(--bg-primary)" : "var(--muted-2)",
-                  background: loginType === type ? "var(--brand)" : "transparent",
-                  fontSize: "13px",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                  textTransform: "capitalize"
-                }}
+        <div className="auth3d-tabs">
+          {["company","individual"].map((t) => (
+            <button
+              key={t}
+              className={`auth3d-tab${loginType === t ? " auth3d-tab--active" : ""}`}
+              onClick={() => setLoginType(t)}
+            >
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        {loginType === "company" && (
+          <div className="auth3d-subroles">
+            {["employee","admin"].map((r) => (
+              <button
+                key={r}
+                className={`auth3d-subrole${companyRole === r ? " auth3d-subrole--active" : ""}`}
+                onClick={() => setRole(r)}
               >
-                {type}
+                {r.toUpperCase()}
               </button>
             ))}
           </div>
+        )}
 
-          {/* Sub-Role Selector (Only for Company) */}
-          {loginType === "company" && (
-            <div style={{ display: "flex", gap: "8px", marginBottom: "32px", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px" }}>
-              {["employee", "admin"].map(role => (
-                <button 
-                  key={role}
-                  onClick={() => setCompanyRole(role)}
-                  style={{ 
-                    flex: 1, 
-                    textAlign: "center", 
-                    padding: "8px 0", 
-                    background: "none",
-                    border: "none",
-                    borderBottom: companyRole === role ? "2px solid var(--brand)" : "2px solid transparent",
-                    color: companyRole === role ? "var(--text-primary)" : "var(--muted-2)",
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    textTransform: "uppercase",
-                    letterSpacing: "1px"
-                  }}
-                >
-                  {role}
-                </button>
-              ))}
+        <form onSubmit={handleSubmit} className="auth3d-form">
+
+          <div className={`auth3d-field${focused === "email" ? " auth3d-field--focused" : ""}`}>
+            <label className="auth3d-label">Email Identifier</label>
+            <div className="auth3d-input-wrap">
+              <Mail size={14} className="auth3d-input-icon" />
+              <input
+                id="sx-email"
+                type="email"
+                autoComplete="email"
+                placeholder="name@organization.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onFocus={() => setFocused("email")}
+                onBlur={() => setFocused(null)}
+                className="auth3d-input"
+                required
+              />
+              <div className="auth3d-input-glow" />
             </div>
-          )}
+          </div>
 
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            <div className="field">
-              <label className="label" style={{ color: "var(--muted-2)", fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px" }}>Email Identifier</label>
-              <div style={{ position: "relative" }}>
-                <Mail size={16} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--muted-2)" }} />
-                <input 
-                  type="email" 
-                  placeholder="name@organization.com" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="input"
-                  style={{ paddingLeft: "42px" }}
-                  required 
-                />
-              </div>
+          <div className={`auth3d-field${focused === "password" ? " auth3d-field--focused" : ""}`}>
+            <label className="auth3d-label">Access Password</label>
+            <div className="auth3d-input-wrap">
+              <Lock size={14} className="auth3d-input-icon" />
+              <input
+                id="sx-password"
+                type={showPwd ? "text" : "password"}
+                autoComplete="current-password"
+                placeholder="••••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setFocused("password")}
+                onBlur={() => setFocused(null)}
+                className="auth3d-input auth3d-input--padright"
+                required
+              />
+              <button
+                type="button"
+                className="auth3d-eye-btn"
+                onClick={() => setShowPwd(!showPwd)}
+                tabIndex={-1}
+              >
+                {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+              <div className="auth3d-input-glow" />
             </div>
+          </div>
 
-            <div className="field">
-              <label className="label" style={{ color: "var(--muted-2)", fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px" }}>Access Password</label>
-              <div style={{ position: "relative" }}>
-                <Lock size={16} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--muted-2)" }} />
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  placeholder="••••••••" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input"
-                  style={{ paddingLeft: "42px", paddingRight: "42px" }}
-                  required 
-                />
-                <button 
-                  type="button" 
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--muted-2)", cursor: "pointer" }}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
+          <div className="auth3d-forgot">
+            <a href="#" className="auth3d-forgot-link">Recovery Protocol?</a>
+          </div>
 
-            <div style={{ textAlign: "right" }}>
-              <a href="#" style={{ color: "var(--brand)", fontSize: "12px", textDecoration: "none", opacity: 0.8 }}>Recovery Protocol?</a>
-            </div>
+          {error && <div className="auth3d-error">{error}</div>}
 
-            {error && <div className="toast toast--err" style={{ fontSize: "13px" }}>{error}</div>}
+          <button type="submit" disabled={busy} className="auth3d-btn-primary">
+            {busy ? (
+              <span className="auth3d-btn-loading">
+                <span className="auth3d-spinner" />
+                ESTABLISHING CONNECTION…
+              </span>
+            ) : (
+              `LOGIN AS ${(loginType === "company" ? companyRole : "INDIVIDUAL").toUpperCase()}`
+            )}
+            <div className="auth3d-btn-shine" />
+          </button>
 
-            <button type="submit" disabled={busy} className="btn btn--primary" style={{ height: "48px", fontWeight: "700", marginTop: "8px" }}>
-              {busy ? "ESTABLISHING CONNECTION..." : `LOGIN AS ${companyRole.toUpperCase()}`}
+          <div className="auth3d-divider"><span>or continue with</span></div>
+
+          <div className="auth3d-social">
+            <button type="button" className="auth3d-social-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              Google
             </button>
-            
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "8px" }}>
-              <button type="button" onClick={() => socialLoginStub("Google")} className="btn btn--ghost" style={{ fontSize: "12px", height: "42px" }}>
-                <Globe size={16} style={{ marginRight: "8px" }} /> Google
-              </button>
-              <button type="button" onClick={() => socialLoginStub("GitHub")} className="btn btn--ghost" style={{ fontSize: "12px", height: "42px" }}>
-                <Globe size={16} style={{ marginRight: "8px" }} /> GitHub
-              </button>
-            </div>
+            <button type="button" className="auth3d-social-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="#8ba7c7">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+              GitHub
+            </button>
+          </div>
 
-            <div style={{ fontSize: "13px", textAlign: "center", marginTop: "16px", color: "var(--muted-2)" }}>
-              No security perimeter defined?{" "}
-              <Link to="/register" style={{ color: "var(--brand)", fontWeight: "700", textDecoration: "none" }}>
-                Register Organization →
-              </Link>
-            </div>
-          </form>
-        </div>
-
-        {/* Legal/Footer */}
-        <div style={{ marginTop: "40px", textAlign: "center" }}>
-          <p style={{ fontSize: "11px", color: "var(--muted-2)", letterSpacing: "1px", textTransform: "uppercase" }}>
-            Protected by Vantix Encryption Node &middot; {new Date().getFullYear()}
+          <p className="auth3d-register">
+            No security perimeter?{" "}
+            <Link to="/register" className="auth3d-register-link">
+              Register Organization →
+            </Link>
           </p>
+
+        </form>
+
+        <div className="auth3d-footer">
+          <div className="auth3d-status-dot" />
+          <span>Protected by ShieldX Encryption Node · {new Date().getFullYear()}</span>
         </div>
+
       </div>
     </div>
   );

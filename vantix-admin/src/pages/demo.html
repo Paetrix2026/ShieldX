@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Reference Match — 3D Cube Scene</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+const canvas = document.getElementById('c');
+const W = () => window.innerWidth;
+const H = () => window.innerHeight;
+
+/* ── Renderer ── */
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(W(), H());
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.90;
+
+/* ── Scene ── */
+const scene = new THREE.Scene();
+
+// Background gradient via CSS-style (rendered as a gradient background color)
+// Matches reference: light gray center → dark navy edges
+renderer.setClearColor(0x6a7080);   // fallback flat color
+
+/* ── Camera: upper-right 3/4 view ── */
+const camera = new THREE.PerspectiveCamera(40, W() / H(), 0.1, 200);
+camera.position.set(11, 8.5, 13);
+camera.lookAt(1.0, 1.5, 0.5);
+
+/* ════════════════════════════════════════════
+   LIGHTING — HemisphereLight = studio HDRI
+   Exactly how the reference was rendered
+════════════════════════════════════════════ */
+// Sky: the muted blue-gray of the reference background
+// Ground: deep dark (bottom faces go nearly black)
+const hemi = new THREE.HemisphereLight(0x7a8698, 0x101418, 2.5);
+scene.add(hemi);
+
+// Key: strong top-left — illuminates top faces
+const key = new THREE.DirectionalLight(0xc0ccd8, 3.0);
+key.position.set(-6, 14, 3);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.near = 0.1;
+key.shadow.camera.far  = 60;
+key.shadow.camera.left = key.shadow.camera.bottom = -15;
+key.shadow.camera.right = key.shadow.camera.top   =  15;
+scene.add(key);
+
+// Soft front fill — reveals front faces slightly
+const fill = new THREE.DirectionalLight(0x607080, 0.9);
+fill.position.set(10, 2, 14);
+scene.add(fill);
+
+/* ════════════════════════════════════════════
+   MATERIALS
+════════════════════════════════════════════ */
+const matA = new THREE.MeshStandardMaterial({ color: 0x222530, roughness: 0.65, metalness: 0.35 });
+const matB = new THREE.MeshStandardMaterial({ color: 0x1c1f2c, roughness: 0.70, metalness: 0.30 });
+
+const glassMat = new THREE.MeshStandardMaterial({
+  color: 0x304870, roughness: 0.05, metalness: 0.95,
+  transparent: true, opacity: 0.28, side: THREE.DoubleSide,
+});
+
+const darkMat = new THREE.MeshStandardMaterial({ color: 0x131520, roughness: 0.55, metalness: 0.55 });
+
+/* ════════════════════════════════════════════
+   CLUSTER — hand-crafted to match reference
+════════════════════════════════════════════ */
+const cluster = new THREE.Group();
+const G = 1.06;
+
+const cubes = [
+  // Y=0
+  [0,0,0],[1,0,0],[2,0,0],[3,0,0],
+  [0,0,1],[1,0,1],[2,0,1],[3,0,1],
+  [0,0,2],[1,0,2],[2,0,2],[3,0,2],
+  [0,0,3],[1,0,3],[2,0,3],
+  [-1,0,0],[-1,0,1],[4,0,0],[4,0,1],
+  // Y=1
+  [0,1,0],[1,1,0],[2,1,0],[3,1,0],
+  [0,1,1],[1,1,1],[2,1,1],
+  [0,1,2],[1,1,2],[2,1,2],
+  [0,1,3],[1,1,3],[-1,1,0],[3,1,1],
+  // Y=2
+  [0,2,0],[1,2,0],[2,2,0],
+  [0,2,1],[1,2,1],[2,2,1],
+  [0,2,2],[1,2,2],[1,2,3],
+  [3,2,0],[-1,2,0],
+  // Y=3
+  [0,3,0],[1,3,0],[2,3,0],
+  [0,3,1],[1,3,1],[0,3,2],
+];
+
+cubes.forEach(([x, y, z]) => {
+  const mat  = (x + y + z) % 2 === 0 ? matA : matB;
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat);
+  mesh.position.set(x * G, y * G, z * G);
+  mesh.castShadow = mesh.receiveShadow = true;
+  cluster.add(mesh);
+});
+cluster.position.set(-1.5, -1.8, -1.5);
+scene.add(cluster);
+
+/* ── Glass base panels ── */
+const p1 = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.06, 3.0), glassMat);
+p1.position.set(-0.2, -2.3, 0.2); p1.rotation.y = 0.14;
+p1.receiveShadow = true; scene.add(p1);
+
+const p2 = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.06, 2.4), glassMat);
+p2.position.set(1.8, -2.56, 2.2); p2.rotation.y = -0.10;
+p2.receiveShadow = true; scene.add(p2);
+
+/* ── Torus ring ── */
+const torus = new THREE.Mesh(new THREE.TorusGeometry(0.30, 0.08, 16, 48), darkMat);
+torus.position.set(0.5, 7.0, 2.0);
+torus.rotation.set(0.5, 0.2, 0.1);
+torus.castShadow = true;
+scene.add(torus);
+
+/* ── Octahedron diamonds ── */
+const dPos = [
+  [6.5, 3.2, -1.0, 0.25],
+  [5.2, 6.2,  3.5, 0.20],
+  [-2.8,5.5,  4.0, 0.17],
+  [7.8, 1.5,  3.0, 0.22],
+];
+const dGroup = new THREE.Group();
+dPos.forEach(([x,y,z,r]) => {
+  const m = new THREE.Mesh(new THREE.OctahedronGeometry(r, 0), darkMat);
+  m.position.set(x,y,z); m.rotation.set(0.4, 0.8, 0.2);
+  m.castShadow = true; dGroup.add(m);
+});
+scene.add(dGroup);
+
+/* ── Cones ── */
+const cPos = [[7.0,2.5,-2.5,0.22,0.52],[-1.8,-0.8,6.5,0.18,0.42]];
+const cGroup = new THREE.Group();
+cPos.forEach(([x,y,z,r,h]) => {
+  const m = new THREE.Mesh(new THREE.ConeGeometry(r, h, 4), darkMat);
+  m.position.set(x,y,z); m.rotation.set(Math.PI, 0.6, 0.1);
+  m.castShadow = true; cGroup.add(m);
+});
+scene.add(cGroup);
+
+/* ── Small scattered cubes ── */
+const sPos = [[6.2,5.0,-2.0,0.27],[-3.2,4.5,1.8,0.22],[7.5,3.0,4.0,0.25],[4.0,7.5,-1.0,0.20],[-2.5,-1.5,5.5,0.23]];
+const sGroup = new THREE.Group();
+sPos.forEach(([x,y,z,s],i) => {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(s,s,s), darkMat);
+  m.position.set(x,y,z); m.rotation.set(i*0.7,i*1.1,i*0.5);
+  m.castShadow = true; sGroup.add(m);
+});
+scene.add(sGroup);
+
+/* ── Mouse parallax ── */
+let mX=0, mY=0, tX=0, tY=0;
+window.addEventListener('mousemove', e => {
+  mX = (e.clientX / W() - 0.5) * 2;
+  mY = (e.clientY / H() - 0.5) * 2;
+});
+window.addEventListener('resize', () => {
+  renderer.setSize(W(), H());
+  camera.aspect = W() / H();
+  camera.updateProjectionMatrix();
+});
+
+/* ── Animate ── */
+const clock = new THREE.Clock();
+(function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  tX += (mX - tX) * 0.04;
+  tY += (mY - tY) * 0.04;
+
+  cluster.rotation.y = tX * 0.12 + Math.sin(t * 0.10) * 0.05;
+  cluster.rotation.x = tY * 0.08 + Math.cos(t * 0.12) * 0.03;
+  cluster.position.y = -1.8 + Math.sin(t * 0.40) * 0.15;
+
+  p1.position.y = p2.position.y = -2.3 + Math.sin(t * 0.40) * 0.08;
+
+  torus.rotation.x += 0.005; torus.rotation.z += 0.003;
+  torus.position.y = 7.0 + Math.sin(t * 0.6) * 0.25;
+
+  dGroup.children.forEach((m,i) => {
+    m.rotation.x += 0.007; m.rotation.y += 0.005;
+    m.position.y += Math.sin(t * 0.8 + i * 1.5) * 0.007;
+  });
+  cGroup.children.forEach((m,i) => {
+    m.rotation.y += 0.009;
+    m.position.y += Math.sin(t * 0.65 + i * 2.0) * 0.007;
+  });
+  sGroup.children.forEach((m,i) => {
+    m.rotation.x += 0.005 + i*0.001;
+    m.rotation.y += 0.007 + i*0.0008;
+    m.position.y += Math.sin(t * 0.9 + i * 1.8) * 0.006;
+  });
+
+  renderer.render(scene, camera);
+})();
+</script>
+
+</body>
+</html>
